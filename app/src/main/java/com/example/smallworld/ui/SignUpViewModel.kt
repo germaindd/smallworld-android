@@ -1,21 +1,34 @@
 package com.example.smallworld.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.smallworld.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor() : ViewModel() {
+class SignUpViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
-    private val _username = MutableStateFlow("")
+    private var _username = MutableStateFlow("")
     val username: StateFlow<String>
         get() = _username
 
     private val _password = MutableStateFlow("")
     val password: StateFlow<String>
         get() = _password
+
+    private val _status = MutableStateFlow(Status.PENDING)
+    val status: StateFlow<Status>
+        get() = _status
+
+    enum class Status {
+        PENDING, SUCCESS, FAILURE
+    }
 
     fun onUsernameChange(value: String) {
         _username.value = value
@@ -26,6 +39,8 @@ class SignUpViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onSignUpClick() {
-
+        viewModelScope.launch {
+            authRepository.signUp(username.value, password.value)
+        }
     }
 }

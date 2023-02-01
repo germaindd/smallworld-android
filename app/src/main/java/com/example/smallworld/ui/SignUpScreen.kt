@@ -11,11 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(viewModel: SignUpViewModel, modifier: Modifier = Modifier) {
+fun SignUpScreen(
+    modifier: Modifier = Modifier,
+    viewModel: SignUpViewModel = hiltViewModel()
+) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxSize()) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -44,6 +48,6 @@ fun SignUpScreen(viewModel: SignUpViewModel, modifier: Modifier = Modifier) {
 @Composable
 fun SignUpScreenPreview() {
     SmallWorldTheme {
-        SignUpScreen(viewModel = SignUpViewModel())
+//        SignUpScreen(viewModel = SignUpViewModel())
     }
 }
