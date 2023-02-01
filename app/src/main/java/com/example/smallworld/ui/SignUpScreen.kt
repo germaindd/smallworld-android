@@ -1,14 +1,12 @@
 package com.example.smallworld.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,25 +15,27 @@ import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(modifier: Modifier = Modifier) {
-    var username by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-
+fun SignUpScreen(viewModel: SignUpViewModel, modifier: Modifier = Modifier) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxSize()) {
-        Column {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             TextField(
-                username,
-                onValueChange = { value: String -> username = value },
+                viewModel.username.collectAsState().value,
+                onValueChange = viewModel::onUsernameChange,
                 singleLine = true,
                 placeholder = { Text(text = "Username") }
             )
-            Spacer(modifier = Modifier.size(8.dp))
             TextField(
-                password,
-                onValueChange = { password = it },
+                viewModel.password.collectAsState().value,
+                onValueChange = viewModel::onPasswordChange,
                 singleLine = true,
                 placeholder = { Text(text = "Password") }
             )
+            Button(onClick = viewModel::onSignUpClick) {
+                Text(text = "Sign Up")
+            }
         }
     }
 }
@@ -44,6 +44,6 @@ fun SignUpScreen(modifier: Modifier = Modifier) {
 @Composable
 fun SignUpScreenPreview() {
     SmallWorldTheme {
-        SignUpScreen()
+        SignUpScreen(viewModel = SignUpViewModel())
     }
 }

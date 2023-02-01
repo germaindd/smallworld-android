@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,7 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SmallWorldTheme {
                 // A surface container using the 'background' color from the theme
-                SmallWorldApp()
+                SmallWorldApp(signUpViewModel)
             }
         }
     }
@@ -37,35 +36,28 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SmallWorldApp() {
+fun SmallWorldApp(signUpViewModel: SignUpViewModel) {
     val navController = rememberNavController()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        SmallWorldNavHost(navHostController = navController)
+        SmallWorldNavHost(navController, signUpViewModel)
     }
 }
 
 @Composable
 fun SmallWorldNavHost(
     navHostController: NavHostController,
+    signUpViewModel: SignUpViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navHostController, startDestination = "signup", modifier = modifier
     ) {
         composable("signup") {
-            SignUpScreen()
+            SignUpScreen(signUpViewModel)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    SmallWorldTheme {
-        SignUpScreen()
     }
 }
