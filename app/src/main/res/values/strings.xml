@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Small World</string>
+    <string name="landing_page_sign_in">Sign In</string>
+    <string name="landing_page_sign_up">Sign Up</string>
 </resources>

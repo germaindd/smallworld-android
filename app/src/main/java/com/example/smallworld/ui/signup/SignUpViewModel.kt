@@ -1,4 +1,4 @@
-package com.example.smallworld.ui
+package com.example.smallworld.ui.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,14 +21,6 @@ class SignUpViewModel @Inject constructor(
     private val _password = MutableStateFlow("")
     val password: StateFlow<String>
         get() = _password
-
-    private val _status = MutableStateFlow(Status.PENDING)
-    val status: StateFlow<Status>
-        get() = _status
-
-    enum class Status {
-        PENDING, SUCCESS, FAILURE
-    }
 
     fun onUsernameChange(value: String) {
         _username.value = value
