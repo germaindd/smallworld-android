@@ -2,7 +2,7 @@ package com.example.smallworld.ui.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.smallworld.AuthRepository
+import com.example.smallworld.data.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,4 +1,4 @@
-package com.example.smallworld.data.models
+package com.example.smallworld.data.auth.models
 
 data class SignUpDto(
     val username: String,
