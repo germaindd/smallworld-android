@@ -10,4 +10,5 @@
     <string name="sign_up_hide_password">Hide Password</string>
     <string name="sign_up_show_password">Show Password</string>
     <string name="sign_up_next_button">Next</string>
+    <string name="sign_up_password_error_text">Invalid password. Password must be 8 to 30 characters long, contain one lowercase letter, one uppercase letter, and at least one number or one special character.</string>
 </resources>

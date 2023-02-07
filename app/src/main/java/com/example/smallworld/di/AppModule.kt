@@ -6,15 +6,20 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DispatcherIO
 
 @InstallIn(SingletonComponent::class)
 @Module
-class NetworkModule {
-
-    // TODO: should this be a Singleton?
+class AppModule {
     @Singleton
     @Provides
     fun provideRetrofit(): SmallWorldApi =
@@ -23,4 +28,9 @@ class NetworkModule {
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(SmallWorldApi::class.java)
+
+    @DispatcherIO
+    @Provides
+    fun provideDispatcherIo(): CoroutineDispatcher = Dispatchers.IO
 }
+

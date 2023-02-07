@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.smallworld.R
+import com.example.smallworld.data.auth.models.SignUpValidationResult
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @Composable
@@ -27,26 +28,30 @@ internal fun SignUpScreenOne(
     modifier: Modifier = Modifier,
 ) {
     SignUpScreenOneContent(
-        modifier,
-        viewModel.email.collectAsState().value,
-        viewModel::onEmailChange,
-        viewModel.password.collectAsState().value,
-        viewModel::onPasswordChange,
-        viewModel::onNextClick,
-        onBackClick
+        modifier = modifier,
+        email = viewModel.email.collectAsState().value,
+        onEmailChange = viewModel::onEmailChange,
+        password = viewModel.password.collectAsState().value,
+        onPasswordChange = viewModel::onPasswordChange,
+        onNextClick = viewModel::onNextClick,
+        onBackClick = onBackClick,
+        emailError = viewModel.emailError.collectAsState().value,
+        passwordError = viewModel.passwordError.collectAsState().value
     )
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SignUpScreenOneContent(
-    modifier: Modifier = Modifier,
     email: String,
+    emailError: SignUpValidationResult?,
     onEmailChange: (String) -> Unit,
     password: String,
+    passwordError: Boolean,
     onPasswordChange: (String) -> Unit,
     onNextClick: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -78,14 +83,29 @@ private fun SignUpScreenOneContent(
                 EmailTextField(
                     value = email,
                     onEmailChange = onEmailChange,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = emailError != null,
+                    supportingText = when (emailError) {
+                        SignUpValidationResult.INVALID_FORMAT -> {
+                            { Text(text = "Invalid Email") }
+                        }
+                        SignUpValidationResult.CONFLICT -> {
+                            { Text(text = "User with that email already exists") }
+                        }
+                        SignUpValidationResult.SUCCESS,
+                        null -> null
+                    }
                 )
                 PasswordTextField(
                     value = password,
                     onPasswordChange = onPasswordChange,
+                    isError = passwordError,
+                    supportingText = if (passwordError) {
+                        { Text(stringResource(R.string.sign_up_password_error_text)) }
+                    } else null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp)
+                        .padding(top = 16.dp),
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
@@ -104,11 +124,15 @@ private fun SignUpScreenOneContent(
 private fun EmailTextField(
     value: String,
     onEmailChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean,
+    supportingText: @Composable (() -> Unit)?
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onEmailChange,
+        isError = isError,
+        supportingText = supportingText,
         modifier = modifier,
         singleLine = true,
         keyboardOptions = KeyboardOptions(
@@ -125,15 +149,18 @@ private fun EmailTextField(
 private fun PasswordTextField(
     value: String,
     onPasswordChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    isError: Boolean,
+    supportingText: @Composable (() -> Unit)?,
+    modifier: Modifier = Modifier,
 ) {
-    // TODO move this to viewmodel
-    val isPasswordVisible = remember { mutableStateOf(false) }
+    var isPasswordVisible by remember { mutableStateOf(false) }
 
     OutlinedTextField(
         value = value,
         modifier = modifier,
         onValueChange = onPasswordChange,
+        isError = isError,
+        supportingText = supportingText,
         singleLine = true,
         keyboardOptions = KeyboardOptions(
             autoCorrect = false,
@@ -141,15 +168,15 @@ private fun PasswordTextField(
             // TODO get it so that done does the same thing as button
             imeAction = ImeAction.Done
         ),
-        visualTransformation = if (isPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         label = { Text(text = stringResource(R.string.sign_up_password_label)) },
         trailingIcon = {
             IconButton(
-                onClick = { isPasswordVisible.value = !isPasswordVisible.value }
+                onClick = { isPasswordVisible = !isPasswordVisible }
             ) {
                 Icon(
-                    imageVector = if (isPasswordVisible.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                    contentDescription = stringResource(if (isPasswordVisible.value) R.string.sign_up_hide_password else R.string.sign_up_show_password)
+                    imageVector = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription = stringResource(if (isPasswordVisible) R.string.sign_up_hide_password else R.string.sign_up_show_password)
                 )
             }
         }
@@ -160,7 +187,7 @@ private fun PasswordTextField(
 @Composable
 fun EmailTextFieldPreview() {
     SmallWorldTheme {
-        EmailTextField(value = "someemail@email.com", onEmailChange = {})
+        EmailTextField(value = "someemail@email.com", onEmailChange = {}, isError = false, supportingText = null)
     }
 }
 
@@ -168,7 +195,12 @@ fun EmailTextFieldPreview() {
 @Composable
 fun PasswordTextFieldPreview() {
     SmallWorldTheme {
-        PasswordTextField(value = "somepassword", onPasswordChange = {})
+        PasswordTextField(
+            value = "somepassword",
+            onPasswordChange = {},
+            isError = false,
+            supportingText = null
+        )
     }
 }
 
@@ -182,7 +214,9 @@ fun SignUpScreenPreview() {
             password = "password",
             onPasswordChange = {},
             onNextClick = {},
-            onBackClick = {}
+            onBackClick = {},
+            emailError = SignUpValidationResult.CONFLICT,
+            passwordError = true
         )
     }
 }
