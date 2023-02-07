@@ -21,7 +21,7 @@ fun NavGraphBuilder.signUpGraph(navController: NavController) =
                 navController.getBackStackEntry(signUpGraphRoute)
             }
             val viewModel: SignUpViewModel = hiltViewModel(navGraphEntry)
-            SignUpScreenOne(viewModel)
+            SignUpScreenOne(viewModel, onBackClick = { navController.popBackStack() })
         }
         composable(screenTwoRoute) {
             Text("TODO")

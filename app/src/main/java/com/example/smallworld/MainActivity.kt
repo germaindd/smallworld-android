@@ -3,7 +3,12 @@ package com.example.smallworld
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.smallworld.ui.landing.landingScreenRoute
@@ -29,17 +34,23 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SmallWorldApp() {
-    val navController = rememberNavController()
-    NavHost(
-        navController = navController, startDestination = landingScreenRoute
+fun SmallWorldApp(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        landingScreen(
-            onSignInButtonClick = navController::navigateToSignIn,
-            onSignUpButtonClick = navController::navigateToSignUpGraph
-        )
-        signUpGraph(navController)
-        signInScreen()
+        val navController = rememberNavController()
+        NavHost(
+            navController = navController, startDestination = landingScreenRoute
+        ) {
+            landingScreen(
+                onSignInButtonClick = navController::navigateToSignIn,
+                onSignUpButtonClick = navController::navigateToSignUpGraph
+            )
+            signUpGraph(navController)
+            signInScreen()
+        }
     }
 }
 

@@ -14,25 +14,25 @@ class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private var _username = MutableStateFlow("")
-    val username: StateFlow<String>
-        get() = _username
+    private var _email = MutableStateFlow("")
+    val email: StateFlow<String>
+        get() = _email
 
     private val _password = MutableStateFlow("")
     val password: StateFlow<String>
         get() = _password
 
-    fun onUsernameChange(value: String) {
-        _username.value = value
+    fun onEmailChange(value: String) {
+        _email.value = value
     }
 
     fun onPasswordChange(value: String) {
         _password.value = value
     }
 
-    fun onSignUpClick() {
+    fun onNextClick() {
         viewModelScope.launch {
-            authRepository.signUp(username.value, password.value)
+            authRepository.signUp(email.value, password.value)
         }
     }
 }

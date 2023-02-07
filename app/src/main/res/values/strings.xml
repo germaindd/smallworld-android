@@ -1,5 +1,13 @@
 <resources>
     <string name="app_name">Small World</string>
+
     <string name="landing_page_sign_in">Sign In</string>
     <string name="landing_page_sign_up">Sign Up</string>
+
+    <string name="global_go_back">Go Back</string>
+    <string name="sign_up_email_label">Email</string>
+    <string name="sign_up_password_label">Password</string>
+    <string name="sign_up_hide_password">Hide Password</string>
+    <string name="sign_up_show_password">Show Password</string>
+    <string name="sign_up_next_button">Next</string>
 </resources>

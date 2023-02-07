@@ -1,20 +1,16 @@
 package com.example.smallworld.ui.signup
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -27,15 +23,17 @@ import com.example.smallworld.ui.theme.SmallWorldTheme
 @Composable
 internal fun SignUpScreenOne(
     viewModel: SignUpViewModel,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SignUpScreenOneContent(
         modifier,
-        viewModel.username.collectAsState().value,
-        viewModel::onUsernameChange,
+        viewModel.email.collectAsState().value,
+        viewModel::onEmailChange,
         viewModel.password.collectAsState().value,
         viewModel::onPasswordChange,
-        viewModel::onSignUpClick,
+        viewModel::onNextClick,
+        onBackClick
     )
 }
 
@@ -43,92 +41,134 @@ internal fun SignUpScreenOne(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SignUpScreenOneContent(
     modifier: Modifier = Modifier,
-    username: String,
-    onUsernameChange: (String) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
-    onSignUpClick: () -> Unit
+    onNextClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
-    val isPasswordVisible = remember { mutableStateOf(false) }
-
-    Box(
-        contentAlignment = Alignment.Center,
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .paint(
-                painterResource(id = R.drawable.sign_up_background),
-                true,
-                contentScale = ContentScale.Crop
-            )
-            .verticalScroll(rememberScrollState())
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .padding(16.dp)
-                .width(IntrinsicSize.Min)
-        ) {
-            Image(
-                painter = painterResource(R.drawable.earth),
-                contentDescription = null,
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Sign Up") },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.global_go_back)
+                            )
+                        }
+                    },
+                )
+
+            }
+        ) { paddingValues ->
+            Column(
+                verticalArrangement = Arrangement.Top,
                 modifier = Modifier
-                    .size(150.dp)
-                    .shadow(20.dp, RoundedCornerShape(75.dp), true)
-            )
-            OutlinedTextField(
-                username,
-                onValueChange = onUsernameChange,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                placeholder = { Text(text = "Email") },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary.copy(0.7f),
-                    placeholderColor = MaterialTheme.colorScheme.onPrimary.copy(0.7f),
-                    focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                    textColor = MaterialTheme.colorScheme.onPrimary,
-                    cursorColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-            OutlinedTextField(
-                password,
-                onValueChange = onPasswordChange,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                visualTransformation = if (isPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
-                placeholder = { Text(text = "Password") },
-                trailingIcon = {
-                    Image(
-                        painterResource(id = R.drawable.sign_up_show_password),
-                        alpha = if (isPasswordVisible.value) 1.0f else 0.5f,
-                        contentDescription = "Show Password",
-                        modifier = Modifier
-                            .clickable { isPasswordVisible.value = !isPasswordVisible.value }
-                    )
-                },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary.copy(0.7f),
-                    placeholderColor = MaterialTheme.colorScheme.onPrimary.copy(0.7f),
-                    focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                    textColor = MaterialTheme.colorScheme.onPrimary,
-                    cursorColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-            Button(
-                onClick = onSignUpClick,
-                modifier = Modifier.fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
             ) {
-                Text(text = "Sign Up")
+                EmailTextField(
+                    value = email,
+                    onEmailChange = onEmailChange,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                PasswordTextField(
+                    value = password,
+                    onPasswordChange = onPasswordChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = onNextClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(R.string.sign_up_next_button))
+                }
             }
         }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun EmailTextField(
+    value: String,
+    onEmailChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onEmailChange,
+        modifier = modifier,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            autoCorrect = false,
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+        ),
+        label = { Text(text = stringResource(R.string.sign_up_email_label)) }
+    )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun PasswordTextField(
+    value: String,
+    onPasswordChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // TODO move this to viewmodel
+    val isPasswordVisible = remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = value,
+        modifier = modifier,
+        onValueChange = onPasswordChange,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            autoCorrect = false,
+            keyboardType = KeyboardType.Password,
+            // TODO get it so that done does the same thing as button
+            imeAction = ImeAction.Done
+        ),
+        visualTransformation = if (isPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+        label = { Text(text = stringResource(R.string.sign_up_password_label)) },
+        trailingIcon = {
+            IconButton(
+                onClick = { isPasswordVisible.value = !isPasswordVisible.value }
+            ) {
+                Icon(
+                    imageVector = if (isPasswordVisible.value) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription = stringResource(if (isPasswordVisible.value) R.string.sign_up_hide_password else R.string.sign_up_show_password)
+                )
+            }
+        }
+    )
+}
+
+@Preview
+@Composable
+fun EmailTextFieldPreview() {
+    SmallWorldTheme {
+        EmailTextField(value = "someemail@email.com", onEmailChange = {})
+    }
+}
+
+@Preview
+@Composable
+fun PasswordTextFieldPreview() {
+    SmallWorldTheme {
+        PasswordTextField(value = "somepassword", onPasswordChange = {})
     }
 }
 
@@ -137,11 +177,12 @@ private fun SignUpScreenOneContent(
 fun SignUpScreenPreview() {
     SmallWorldTheme {
         SignUpScreenOneContent(
-            username = "harry@gmail.com",
-            onUsernameChange = {},
+            email = "harry@gmail.com",
+            onEmailChange = {},
             password = "password",
             onPasswordChange = {},
-            onSignUpClick = {}
+            onNextClick = {},
+            onBackClick = {}
         )
     }
 }
