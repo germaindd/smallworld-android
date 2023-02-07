@@ -1,6 +1,5 @@
 package com.example.smallworld.ui.signup
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavBackStackEntry
@@ -34,7 +33,11 @@ fun NavGraphBuilder.signUpGraph(navController: NavController) =
             }
             SignUpScreenOne(viewModel, onBackClick = { navController.popBackStack() })
         }
-        composable(screenTwoRoute) {backStackEntry ->
-            Text("TODO")
+        composable(screenTwoRoute) { backStackEntry ->
+            val viewModel = backStackEntry.signUpViewModel(navController)
+            LaunchedEffect(key1 = viewModel) {
+                viewModel.onSignUpSuccess.collect { TODO() }
+            }
+            SignUpScreenTwo(viewModel = viewModel, onBackClick = { navController.popBackStack() })
         }
     }

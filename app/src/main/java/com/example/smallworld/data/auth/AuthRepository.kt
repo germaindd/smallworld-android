@@ -11,9 +11,9 @@ class AuthRepository @Inject constructor(
     private val api: SmallWorldApi,
     @DispatcherIO private val dispatcher: CoroutineDispatcher
 ) {
-    suspend fun signUp(username: String, password: String): JwtDto =
+    suspend fun signUp(username: String, password: String, email: String): JwtDto =
         withContext(dispatcher) {
-            api.signUp(SignUpDto(username, password))
+            api.signUp(SignUpDto(username, password, email))
         }
 
     suspend fun validateEmailPassword(

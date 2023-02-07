@@ -1,14 +1,22 @@
 <resources>
     <string name="app_name">Small World</string>
 
+    <string name="global_go_back">Go Back</string>
+
     <string name="landing_page_sign_in">Sign In</string>
     <string name="landing_page_sign_up">Sign Up</string>
 
-    <string name="global_go_back">Go Back</string>
+    <string name="sign_up_app_bar_title">Sign Up</string>
     <string name="sign_up_email_label">Email</string>
+    <string name="sign_up_invalid_email">Invalid Email</string>
+    <string name="sign_up_email_conflict">User with that email already exists</string>
     <string name="sign_up_password_label">Password</string>
     <string name="sign_up_hide_password">Hide Password</string>
     <string name="sign_up_show_password">Show Password</string>
-    <string name="sign_up_next_button">Next</string>
     <string name="sign_up_password_error_text">Invalid password. Password must be 8 to 30 characters long, contain one lowercase letter, one uppercase letter, and at least one number or one special character.</string>
+    <string name="sign_up_next_button">Next</string>
+    <string name="sign_up_invalid_username">Invalid username. Username must be between 4 and 30 characters and cannot contain special characters other than underscores or periods.</string>
+    <string name="sign_up_username_conflict">Username already taken</string>
+    <string name="sign_up_username_label">Username</string>
+    <string name="sign_up_sign_up_button">Sign Up</string>
 </resources>

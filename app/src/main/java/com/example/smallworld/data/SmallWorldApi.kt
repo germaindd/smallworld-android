@@ -13,7 +13,7 @@ interface SmallWorldApi {
         @Body validateEmailPasswordDto: ValidateEmailPasswordDto
     ): ValidateEmailPasswordResponseDto
 
-    @POST
+    @POST("auth/validate-signup")
     suspend fun validateUsername(
         @Body validateUsernameDto: ValidateUsernameDto
     ): ValidateUsernameResponseDto

@@ -2,9 +2,9 @@ package com.example.smallworld.ui.signup
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -33,7 +33,7 @@ internal fun SignUpScreenOne(
         onEmailChange = viewModel::onEmailChange,
         password = viewModel.password.collectAsState().value,
         onPasswordChange = viewModel::onPasswordChange,
-        onNextClick = viewModel::onNextClick,
+        onSubmit = viewModel::onScreenOneSubmit,
         onBackClick = onBackClick,
         emailError = viewModel.emailError.collectAsState().value,
         passwordError = viewModel.passwordError.collectAsState().value
@@ -49,71 +49,53 @@ private fun SignUpScreenOneContent(
     password: String,
     passwordError: Boolean,
     onPasswordChange: (String) -> Unit,
-    onNextClick: () -> Unit,
+    onSubmit: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Sign Up") },
-                    navigationIcon = {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.global_go_back)
-                            )
-                        }
-                    },
-                )
-
-            }
-        ) { paddingValues ->
-            Column(
-                verticalArrangement = Arrangement.Top,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp)
-            ) {
-                EmailTextField(
-                    value = email,
-                    onEmailChange = onEmailChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = emailError != null,
-                    supportingText = when (emailError) {
-                        SignUpValidationResult.INVALID_FORMAT -> {
-                            { Text(text = "Invalid Email") }
-                        }
-                        SignUpValidationResult.CONFLICT -> {
-                            { Text(text = "User with that email already exists") }
-                        }
-                        SignUpValidationResult.SUCCESS,
-                        null -> null
+    Scaffold(
+        topBar = { SignUpAppBar(onBackClick = onBackClick) },
+        modifier = modifier.fillMaxSize()
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            EmailTextField(
+                value = email,
+                onEmailChange = onEmailChange,
+                modifier = Modifier.fillMaxWidth(),
+                isError = emailError != null,
+                supportingText = when (emailError) {
+                    SignUpValidationResult.INVALID_FORMAT -> {
+                        { Text(text = stringResource(R.string.sign_up_invalid_email)) }
                     }
-                )
-                PasswordTextField(
-                    value = password,
-                    onPasswordChange = onPasswordChange,
-                    isError = passwordError,
-                    supportingText = if (passwordError) {
-                        { Text(stringResource(R.string.sign_up_password_error_text)) }
-                    } else null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = onNextClick,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = stringResource(R.string.sign_up_next_button))
+                    SignUpValidationResult.CONFLICT -> {
+                        { Text(text = stringResource(R.string.sign_up_email_conflict)) }
+                    }
+                    else -> null
                 }
+            )
+            PasswordTextField(
+                value = password,
+                onPasswordChange = onPasswordChange,
+                isError = passwordError,
+                supportingText = if (passwordError) {
+                    { Text(stringResource(R.string.sign_up_password_error_text)) }
+                } else null,
+                onKeyboardDone = onSubmit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onSubmit,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = stringResource(R.string.sign_up_next_button))
             }
         }
     }
@@ -151,6 +133,7 @@ private fun PasswordTextField(
     onPasswordChange: (String) -> Unit,
     isError: Boolean,
     supportingText: @Composable (() -> Unit)?,
+    onKeyboardDone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -165,9 +148,9 @@ private fun PasswordTextField(
         keyboardOptions = KeyboardOptions(
             autoCorrect = false,
             keyboardType = KeyboardType.Password,
-            // TODO get it so that done does the same thing as button
-            imeAction = ImeAction.Done
+            imeAction = ImeAction.Next
         ),
+        keyboardActions = KeyboardActions(onNext = { onKeyboardDone() }),
         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         label = { Text(text = stringResource(R.string.sign_up_password_label)) },
         trailingIcon = {
@@ -185,35 +168,41 @@ private fun PasswordTextField(
 
 @Preview
 @Composable
-fun EmailTextFieldPreview() {
+private fun EmailTextFieldPreview() {
     SmallWorldTheme {
-        EmailTextField(value = "someemail@email.com", onEmailChange = {}, isError = false, supportingText = null)
-    }
-}
-
-@Preview
-@Composable
-fun PasswordTextFieldPreview() {
-    SmallWorldTheme {
-        PasswordTextField(
-            value = "somepassword",
-            onPasswordChange = {},
+        EmailTextField(
+            value = "someemail@email.com",
+            onEmailChange = {},
             isError = false,
             supportingText = null
         )
     }
 }
 
+@Preview
+@Composable
+private fun PasswordTextFieldPreview() {
+    SmallWorldTheme {
+        PasswordTextField(
+            value = "somepassword",
+            onPasswordChange = {},
+            isError = false,
+            supportingText = null,
+            onKeyboardDone = {}
+        )
+    }
+}
+
 @Preview("Sign Up Screen", widthDp = 400, heightDp = 700, showBackground = true)
 @Composable
-fun SignUpScreenPreview() {
+private fun SignUpScreenPreview() {
     SmallWorldTheme {
         SignUpScreenOneContent(
             email = "harry@gmail.com",
             onEmailChange = {},
             password = "password",
             onPasswordChange = {},
-            onNextClick = {},
+            onSubmit = {},
             onBackClick = {},
             emailError = SignUpValidationResult.CONFLICT,
             passwordError = true

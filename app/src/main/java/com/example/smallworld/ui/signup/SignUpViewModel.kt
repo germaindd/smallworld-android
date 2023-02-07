@@ -17,6 +17,8 @@ import javax.inject.Inject
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
+
+    // Screen One
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email
 
@@ -44,7 +46,7 @@ class SignUpViewModel @Inject constructor(
         _passwordError.value = false
     }
 
-    fun onNextClick() {
+    fun onScreenOneSubmit() {
         val currentJob = currentValidateEmailPasswordJob
         if (
             ((currentJob == null || !currentJob.isActive)
@@ -56,11 +58,45 @@ class SignUpViewModel @Inject constructor(
                         if (
                             emailResult == SignUpValidationResult.SUCCESS
                             && passwordResult == SignUpValidationResult.SUCCESS
-                        ) _onScreenOneSuccess.emit(Unit)
-                        _emailError.value =
-                            if (emailResult == SignUpValidationResult.SUCCESS) null else emailResult
-                        _passwordError.value = passwordResult != SignUpValidationResult.SUCCESS
+                        ) _onScreenOneSuccess.emit(Unit) else {
+                            _emailError.value =
+                                if (emailResult == SignUpValidationResult.SUCCESS) null else emailResult
+                            _passwordError.value = passwordResult != SignUpValidationResult.SUCCESS
+                        }
                     }
+            }
+    }
+
+    // Screen Two
+    private val _username = MutableStateFlow<String>("")
+    val username: StateFlow<String> = _username
+
+    private val _usernameError = MutableStateFlow<SignUpValidationResult?>(null)
+    val usernameError: StateFlow<SignUpValidationResult?> = _usernameError
+
+    var currentSignUpJob: Job? = null
+
+    private val _onSignUpSuccess = MutableSharedFlow<Unit>()
+    val onSignUpSuccess: SharedFlow<Unit> = _onSignUpSuccess
+
+    fun onUsernameChange(value: String) {
+        _username.value = value
+        _usernameError.value = null
+    }
+
+    fun onScreenTwoSubmit() {
+        val currentJob = currentSignUpJob
+        if (
+            (currentJob == null || !currentJob.isActive)
+            && usernameError.value == null
+        )
+            currentSignUpJob = viewModelScope.launch {
+                val usernameValidity = authRepository.validateUsername(username.value)
+                if (usernameValidity == SignUpValidationResult.SUCCESS) {
+                    val signUpDto =
+                        authRepository.signUp(username.value, password.value, email.value)
+                    _onSignUpSuccess.emit(Unit)
+                } else _usernameError.value = usernameValidity
             }
     }
 }
