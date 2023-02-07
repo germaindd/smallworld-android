@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun SignInScreen(modifier: Modifier = Modifier) {
+internal fun SignInScreen(modifier: Modifier = Modifier) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxSize()) {
         Text("Not yet implemented.")
     }

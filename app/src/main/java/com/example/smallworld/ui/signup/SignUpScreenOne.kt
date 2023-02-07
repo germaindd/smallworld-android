@@ -21,16 +21,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smallworld.R
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @Composable
-fun SignUpScreen(
+internal fun SignUpScreenOne(
+    viewModel: SignUpViewModel,
     modifier: Modifier = Modifier,
-    viewModel: SignUpViewModel = hiltViewModel()
 ) {
-    SignUpScreenContent(
+    SignUpScreenOneContent(
         modifier,
         viewModel.username.collectAsState().value,
         viewModel::onUsernameChange,
@@ -42,7 +41,7 @@ fun SignUpScreen(
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun SignUpScreenContent(
+private fun SignUpScreenOneContent(
     modifier: Modifier = Modifier,
     username: String,
     onUsernameChange: (String) -> Unit,
@@ -137,7 +136,7 @@ private fun SignUpScreenContent(
 @Composable
 fun SignUpScreenPreview() {
     SmallWorldTheme {
-        SignUpScreenContent(
+        SignUpScreenOneContent(
             username = "harry@gmail.com",
             onUsernameChange = {},
             password = "password",
