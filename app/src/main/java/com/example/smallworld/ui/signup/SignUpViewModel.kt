@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
 import com.example.smallworld.data.auth.models.SignUpValidationResult
+import com.example.smallworld.services.AuthService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val authService: AuthService
 ) : ViewModel() {
 
     // Screen One
@@ -95,6 +97,7 @@ class SignUpViewModel @Inject constructor(
                 if (usernameValidity == SignUpValidationResult.SUCCESS) {
                     val signUpDto =
                         authRepository.signUp(username.value, password.value, email.value)
+                    authService.setAccessToken(signUpDto.accessToken)
                     _onSignUpSuccess.emit(Unit)
                 } else _usernameError.value = usernameValidity
             }
