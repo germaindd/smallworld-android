@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
 import com.example.smallworld.data.auth.models.SignUpValidationResult
 import com.example.smallworld.services.AuthService
+import com.example.smallworld.ui.snackbar.SnackBarMessage
+import com.example.smallworld.ui.snackbar.SnackBarMessageBus
+import com.example.smallworld.util.logError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val snackBarMessageBus: SnackBarMessageBus
 ) : ViewModel() {
 
     // Screen One
@@ -55,17 +59,21 @@ class SignUpViewModel @Inject constructor(
                     && emailError.value == null) && !passwordError.value
         )
             currentValidateEmailPasswordJob = viewModelScope.launch {
-                authRepository.validateEmailPassword(email.value, password.value)
-                    .let { (emailResult, passwordResult) ->
-                        if (
-                            emailResult == SignUpValidationResult.SUCCESS
-                            && passwordResult == SignUpValidationResult.SUCCESS
-                        ) _onScreenOneSuccess.emit(Unit) else {
-                            _emailError.value =
-                                if (emailResult == SignUpValidationResult.SUCCESS) null else emailResult
-                            _passwordError.value = passwordResult != SignUpValidationResult.SUCCESS
-                        }
-                    }
+                val (emailResult, passwordResult) = try {
+                    authRepository.validateEmailPassword(email.value, password.value)
+                } catch (error: Throwable) {
+                    snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_UP_ERROR_UNKNOWN)
+                    logError(error)
+                    return@launch
+                }
+                if (
+                    emailResult == SignUpValidationResult.SUCCESS
+                    && passwordResult == SignUpValidationResult.SUCCESS
+                ) _onScreenOneSuccess.emit(Unit) else {
+                    _emailError.value =
+                        if (emailResult == SignUpValidationResult.SUCCESS) null else emailResult
+                    _passwordError.value = passwordResult != SignUpValidationResult.SUCCESS
+                }
             }
     }
 
@@ -93,10 +101,21 @@ class SignUpViewModel @Inject constructor(
             && usernameError.value == null
         )
             currentSignUpJob = viewModelScope.launch {
-                val usernameValidity = authRepository.validateUsername(username.value)
+                val usernameValidity = try {
+                    authRepository.validateUsername(username.value)
+                } catch (e: Throwable) {
+                    logError(e)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_UP_ERROR_UNKNOWN)
+                    return@launch
+                }
                 if (usernameValidity == SignUpValidationResult.SUCCESS) {
-                    val signUpDto =
+                    val signUpDto = try {
                         authRepository.signUp(username.value, password.value, email.value)
+                    } catch (e: Throwable) {
+                        logError(e)
+                        snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_UP_ERROR_UNKNOWN)
+                        return@launch
+                    }
                     authService.setAccessToken(signUpDto.accessToken)
                     _onSignUpSuccess.emit(Unit)
                 } else _usernameError.value = usernameValidity

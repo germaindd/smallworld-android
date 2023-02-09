@@ -25,4 +25,5 @@
     <string name="sign_in_something_went_wrong">Something went wrong. Please try again later.</string>
     <string name="sign_in_invalid_sign_in">Invalid sign in. Try again?</string>
     <string name="sign_in_username_email">Username/Email</string>
+    <string name="sign_up_unknown_error">Something went wrong. Please try again later.</string>
 </resources>

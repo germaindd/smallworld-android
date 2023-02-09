@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.HttpStatus
 import com.example.smallworld.data.auth.AuthRepository
 import com.example.smallworld.services.AuthService
+import com.example.smallworld.ui.snackbar.SnackBarMessage
+import com.example.smallworld.ui.snackbar.SnackBarMessageBus
+import com.example.smallworld.util.logError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -16,24 +19,17 @@ data class SignInScreenState(
     val password: String = ""
 )
 
-enum class SignInError {
-    INVALID_CREDENTIALS,
-    UNKNOWN
-}
-
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val snackBarMessageBus: SnackBarMessageBus
 ) : ViewModel() {
     private val usernameOrEmail: MutableStateFlow<String> = MutableStateFlow("")
     private val password: MutableStateFlow<String> = MutableStateFlow("")
 
     private val _state = MutableStateFlow(SignInScreenState())
     val state: StateFlow<SignInScreenState> = _state
-
-    private val _onSignInError = MutableSharedFlow<SignInError>()
-    val onSignInError: SharedFlow<SignInError> = _onSignInError
 
     private val _onSignInSuccess = MutableSharedFlow<Unit>()
     val onSignInSuccess: SharedFlow<Unit> = _onSignInSuccess
@@ -61,13 +57,17 @@ class SignInViewModel @Inject constructor(
                     authRepository.signIn(usernameOrEmail.value, password.value).accessToken
                 authService.setAccessToken(accessToken)
                 _onSignInSuccess.emit(Unit)
-            } catch (error: HttpException) {
-                val signInError = when (error.code()) {
+            } catch (e: HttpException) {
+                logError(e)
+                val message = when (e.code()) {
                     HttpStatus.BAD_REQUEST.code,
-                    HttpStatus.UNAUTHORIZED.code -> SignInError.INVALID_CREDENTIALS
-                    else -> SignInError.UNKNOWN
+                    HttpStatus.UNAUTHORIZED.code -> SnackBarMessage.SIGN_IN_ERROR_UNAUTHORIZED
+                    else -> SnackBarMessage.SIGN_IN_ERROR_UNKNOWN
                 }
-                _onSignInError.emit(signInError)
+                snackBarMessageBus.sendMessage(message)
+            } catch (e: Throwable) {
+                logError(e)
+                snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_IN_ERROR_UNKNOWN)
             }
         }
     }
