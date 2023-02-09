@@ -13,12 +13,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.smallworld.ui.home.homeScreen
 import com.example.smallworld.ui.home.navigateToHome
-import com.example.smallworld.ui.landing.landingScreenRoute
 import com.example.smallworld.ui.landing.landingScreen
+import com.example.smallworld.ui.landing.landingScreenRoute
+import com.example.smallworld.ui.landing.navigateToLanding
 import com.example.smallworld.ui.signin.navigateToSignIn
 import com.example.smallworld.ui.signin.signInScreen
 import com.example.smallworld.ui.signup.navigateToSignUpGraph
 import com.example.smallworld.ui.signup.signUpGraph
+import com.example.smallworld.ui.splash.splashScreen
+import com.example.smallworld.ui.splash.splashScreenRoute
 import com.example.smallworld.ui.theme.SmallWorldTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -44,8 +47,20 @@ fun SmallWorldApp(modifier: Modifier = Modifier) {
     ) {
         val navController = rememberNavController()
         NavHost(
-            navController = navController, startDestination = landingScreenRoute
+            navController = navController, startDestination = splashScreenRoute
         ) {
+            splashScreen(
+                onUserIsSignedIn = {
+                    navController.navigateToHome {
+                        popUpTo(splashScreenRoute) { inclusive = true }
+                    }
+                },
+                onUserIsSignedOut = {
+                    navController.navigateToLanding {
+                        popUpTo(splashScreenRoute) { inclusive = true }
+                    }
+                }
+            )
             landingScreen(
                 onSignInButtonClick = navController::navigateToSignIn,
                 onSignUpButtonClick = navController::navigateToSignUpGraph
