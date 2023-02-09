@@ -7,6 +7,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.example.smallworld.ui.home.navigateToHome
+import com.example.smallworld.ui.landing.landingScreenRoute
 import com.example.smallworld.util.getViewModelScopedTo
 
 private const val signUpGraphRoute = "sign_up_flow"
@@ -36,7 +38,11 @@ fun NavGraphBuilder.signUpGraph(navController: NavController) =
         composable(screenTwoRoute) { backStackEntry ->
             val viewModel = backStackEntry.signUpViewModel(navController)
             LaunchedEffect(key1 = viewModel) {
-                viewModel.onSignUpSuccess.collect { TODO() }
+                viewModel.onSignUpSuccess.collect {
+                    navController.navigateToHome {
+                        popUpTo(landingScreenRoute) { inclusive = true }
+                    }
+                }
             }
             SignUpScreenTwo(viewModel = viewModel, onBackClick = { navController.popBackStack() })
         }

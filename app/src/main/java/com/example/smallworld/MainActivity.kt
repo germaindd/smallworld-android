@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.example.smallworld.ui.home.homeScreen
+import com.example.smallworld.ui.home.navigateToHome
 import com.example.smallworld.ui.landing.landingScreenRoute
 import com.example.smallworld.ui.landing.landingScreen
 import com.example.smallworld.ui.signin.navigateToSignIn
@@ -49,7 +51,14 @@ fun SmallWorldApp(modifier: Modifier = Modifier) {
                 onSignUpButtonClick = navController::navigateToSignUpGraph
             )
             signUpGraph(navController)
-            signInScreen()
+            signInScreen(
+                onSignInSuccess = {
+                    navController.navigateToHome {
+                        popUpTo(landingScreenRoute) { inclusive = true }
+                    }
+                }, onBackClick = { navController.popBackStack() }
+            )
+            homeScreen()
         }
     }
 }

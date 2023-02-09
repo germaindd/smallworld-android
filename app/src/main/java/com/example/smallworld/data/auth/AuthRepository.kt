@@ -28,4 +28,9 @@ class AuthRepository @Inject constructor(
         withContext(dispatcher) {
             api.validateUsername(ValidateUsernameDto(username)).username
         }
+
+    suspend fun signIn(usernameOrEmail: String, password: String): JwtDto =
+        withContext(dispatcher) {
+            api.signIn(SignInDto(usernameOrEmail, password))
+        }
 }

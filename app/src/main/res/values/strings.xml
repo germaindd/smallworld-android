@@ -19,4 +19,10 @@
     <string name="sign_up_username_conflict">Username already taken</string>
     <string name="sign_up_username_label">Username</string>
     <string name="sign_up_sign_up_button">Sign Up</string>
+
+    <string name="sign_in_title">Sign In</string>
+    <string name="sign_sign_sign_in_button">Sign In</string>
+    <string name="sign_in_something_went_wrong">Something went wrong. Please try again later.</string>
+    <string name="sign_in_invalid_sign_in">Invalid sign in. Try again?</string>
+    <string name="sign_in_username_email">Username/Email</string>
 </resources>
