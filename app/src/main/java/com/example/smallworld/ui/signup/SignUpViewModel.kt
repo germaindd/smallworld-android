@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
 import com.example.smallworld.data.auth.models.SignUpValidationResult
 import com.example.smallworld.services.AuthService
+import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import com.example.smallworld.util.logError
@@ -21,7 +22,8 @@ import javax.inject.Inject
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val authService: AuthService,
-    private val snackBarMessageBus: SnackBarMessageBus
+    private val snackBarMessageBus: SnackBarMessageBus,
+    private val networkService: NetworkService
 ) : ViewModel() {
 
     // Screen One
@@ -62,7 +64,7 @@ class SignUpViewModel @Inject constructor(
                 val (emailResult, passwordResult) = try {
                     authRepository.validateEmailPassword(email.value, password.value)
                 } catch (error: Throwable) {
-                    snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_UP_ERROR_UNKNOWN)
+                    checkIfOfflineAndTriggerSnackbar()
                     logError(error)
                     return@launch
                 }
@@ -105,7 +107,7 @@ class SignUpViewModel @Inject constructor(
                     authRepository.validateUsername(username.value)
                 } catch (e: Throwable) {
                     logError(e)
-                    snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_UP_ERROR_UNKNOWN)
+                    checkIfOfflineAndTriggerSnackbar()
                     return@launch
                 }
                 if (usernameValidity == SignUpValidationResult.SUCCESS) {
@@ -113,12 +115,20 @@ class SignUpViewModel @Inject constructor(
                         authRepository.signUp(username.value, password.value, email.value)
                     } catch (e: Throwable) {
                         logError(e)
-                        snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_UP_ERROR_UNKNOWN)
+                        checkIfOfflineAndTriggerSnackbar()
                         return@launch
                     }
                     authService.setAccessToken(signUpDto.accessToken)
                     _onSignUpSuccess.emit(Unit)
                 } else _usernameError.value = usernameValidity
             }
+    }
+
+    private suspend fun checkIfOfflineAndTriggerSnackbar() {
+        snackBarMessageBus.sendMessage(
+            if (networkService.isOnlineStateFlow.value)
+                SnackBarMessage.SIGN_UP_ERROR_UNKNOWN
+            else SnackBarMessage.NO_NETWORK
+        )
     }
 }

@@ -2,6 +2,7 @@
     <string name="app_name">Small World</string>
 
     <string name="global_go_back">Go Back</string>
+    <string name="global_snackbar_check_network">Please check your network connection and try again.</string>
 
     <string name="landing_page_sign_in">Sign In</string>
     <string name="landing_page_sign_up">Sign Up</string>

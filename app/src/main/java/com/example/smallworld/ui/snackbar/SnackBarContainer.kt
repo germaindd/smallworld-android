@@ -16,6 +16,7 @@ private fun getStringResource(snackBarMessage: SnackBarMessage) =
         SnackBarMessage.SIGN_IN_ERROR_UNAUTHORIZED -> R.string.sign_in_invalid_sign_in
         SnackBarMessage.SIGN_IN_ERROR_UNKNOWN -> R.string.sign_in_something_went_wrong
         SnackBarMessage.SIGN_UP_ERROR_UNKNOWN -> R.string.sign_up_unknown_error
+        SnackBarMessage.NO_NETWORK -> R.string.global_snackbar_check_network
     }
 
 @OptIn(ExperimentalMaterial3Api::class)

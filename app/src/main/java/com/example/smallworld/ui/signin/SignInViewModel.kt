@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
 import com.example.smallworld.services.AuthService
+import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import com.example.smallworld.util.logError
@@ -23,7 +24,8 @@ data class SignInScreenState(
 class SignInViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val authService: AuthService,
-    private val snackBarMessageBus: SnackBarMessageBus
+    private val snackBarMessageBus: SnackBarMessageBus,
+    private val networkService: NetworkService
 ) : ViewModel() {
     private val usernameOrEmail: MutableStateFlow<String> = MutableStateFlow("")
     private val password: MutableStateFlow<String> = MutableStateFlow("")
@@ -67,7 +69,11 @@ class SignInViewModel @Inject constructor(
                 snackBarMessageBus.sendMessage(message)
             } catch (e: Throwable) {
                 logError(e)
-                snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_IN_ERROR_UNKNOWN)
+                snackBarMessageBus.sendMessage(
+                    if (!networkService.isOnlineStateFlow.value)
+                        SnackBarMessage.NO_NETWORK
+                    else SnackBarMessage.SIGN_IN_ERROR_UNKNOWN
+                )
             }
         }
     }

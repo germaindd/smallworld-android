@@ -16,13 +16,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smallworld.R
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @Composable
 fun LandingScreen(
-    onSignInButtonClick: () -> Unit,
-    onSignUpButtonClick: () -> Unit,
+    viewModel: LandingViewModel,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -57,14 +57,14 @@ fun LandingScreen(
                 color = MaterialTheme.colorScheme.onPrimary
             )
             Button(
-                onSignInButtonClick,
+                viewModel::onSignInClick,
                 modifier = Modifier
                     .fillMaxWidth(),
             ) {
                 Text(text = stringResource(R.string.landing_page_sign_in))
             }
             Button(
-                onSignUpButtonClick,
+                viewModel::onSignUpClick,
                 modifier = Modifier
                     .fillMaxWidth(),
             ) {
@@ -80,6 +80,7 @@ fun LandingScreen(
 @Composable
 fun LandingScreenPreview() {
     SmallWorldTheme {
-        LandingScreen(onSignInButtonClick = {}, onSignUpButtonClick = {})
+        val viewModel: LandingViewModel = hiltViewModel()
+        LandingScreen(viewModel = viewModel)
     }
 }
