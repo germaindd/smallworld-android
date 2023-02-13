@@ -1,10 +1,48 @@
 package com.example.smallworld.ui.home
 
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.smallworld.ui.map.MapScreen
 
+private enum class SelectedScreen(val icon: ImageVector, val contentDescription: String) {
+    MAP(Icons.Filled.Public, "View Map"),
+    NOTIFICATIONS(Icons.Filled.Notifications, "Notifications"),
+    SETTINGS(Icons.Filled.Settings, "Settings")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
-    Text(text = "YET TO BE IMPLEMENTED")
+    val selected = remember {
+        mutableStateOf(SelectedScreen.MAP)
+    }
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                SelectedScreen.values().forEach {
+                    NavigationBarItem(
+                        selected = selected.value == it,
+                        onClick = { selected.value = it },
+                        icon = { Icon(it.icon, contentDescription = it.contentDescription) }
+                    )
+                }
+            }
+        },
+        modifier = modifier
+    ) { paddingValues ->
+        when (selected.value) {
+            SelectedScreen.MAP -> MapScreen(Modifier.padding(paddingValues))
+            SelectedScreen.NOTIFICATIONS -> Text("Yet to implement")
+            SelectedScreen.SETTINGS -> Text("Yet to implement")
+        }
+    }
 }
