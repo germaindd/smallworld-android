@@ -1,6 +1,8 @@
 package com.example.smallworld.ui.home
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
@@ -21,7 +23,7 @@ private enum class SelectedScreen(val icon: ImageVector, val contentDescription:
     SETTINGS(Icons.Filled.Settings, "Settings")
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
     val selected = remember {
@@ -44,7 +46,12 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     ) { paddingValues ->
         when (selected.value) {
             SelectedScreen.MAP ->
-                MapScreen(hiltViewModel(), Modifier.padding(paddingValues), paddingValues)
+                MapScreen(
+                    hiltViewModel(),
+                    Modifier
+                        .padding(paddingValues)
+                        .consumeWindowInsets(paddingValues)
+                )
             SelectedScreen.NOTIFICATIONS -> Text("Yet to implement")
             SelectedScreen.SETTINGS -> Text("Yet to implement")
         }

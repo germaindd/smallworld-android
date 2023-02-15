@@ -3,9 +3,12 @@ package com.example.smallworld.ui.map
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SentimentDissatisfied
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,8 +34,7 @@ import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
-    modifier: Modifier = Modifier,
-    scaffoldPaddingValues: PaddingValues = PaddingValues(0.dp)
+    modifier: Modifier = Modifier
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
     val active = remember { mutableStateOf(false) }
@@ -52,6 +54,7 @@ fun MapScreen(
                 setOnMapClickListener {
                     focusManager.clearFocus()
                     active.value = false
+                    viewModel.onQueryChange("")
                 }
                 setCompassMargins(
                     top = searchBarHeight + searchBarPadding * 2,
@@ -68,11 +71,7 @@ fun MapScreen(
                 if (!active.value) focusManager.clearFocus()
             },
             modifier = Modifier
-                .windowInsetsPadding(
-                    WindowInsets.ime.exclude(
-                        WindowInsets(bottom = scaffoldPaddingValues.calculateBottomPadding())
-                    )
-                )
+                .imePadding()
                 .padding(16.dp)
                 .fillMaxWidth()
                 .shadow(
@@ -86,11 +85,56 @@ fun MapScreen(
                 )
             }
         ) {
-            state.value.searchResults.forEachIndexed { index, user ->
-                if (index != 0) Divider()
-                SearchItem(text = user.username) {
-
+            when (state.value.searchResultsState) {
+                MapSearchResultsState.NO_QUERY -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = null,
+                            Modifier.size(128.dp),
+                            MaterialTheme.colorScheme.surfaceTint
+                        )
+                        Text(
+                            "Type something in!",
+                            modifier = Modifier.padding(top = 16.dp),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
+                MapSearchResultsState.NO_RESULTS -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.SentimentDissatisfied,
+                            contentDescription = null,
+                            Modifier.size(128.dp),
+                            MaterialTheme.colorScheme.surfaceTint
+                        )
+                        Text(
+                            "No results found for \"${state.value.query}\"",
+                            modifier = Modifier.padding(top = 16.dp),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+                MapSearchResultsState.RESULTS ->
+                    LazyColumn {
+                        itemsIndexed(state.value.searchResults) { index, user ->
+                            if (index != 0) Divider()
+                            SearchItem(text = user.username) {}
+                        }
+                    }
             }
         }
     }

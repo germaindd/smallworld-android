@@ -16,6 +16,7 @@ import com.example.smallworld.R
 @StringRes
 private fun getStringResource(snackBarMessage: SnackBarMessage) =
     when (snackBarMessage) {
+        SnackBarMessage.ERROR_UNKNOWN -> R.string.sign_up_unknown_error
         SnackBarMessage.SIGN_IN_ERROR_UNAUTHORIZED -> R.string.sign_in_invalid_sign_in
         SnackBarMessage.SIGN_IN_ERROR_UNKNOWN -> R.string.sign_in_something_went_wrong
         SnackBarMessage.SIGN_UP_ERROR_UNKNOWN -> R.string.sign_up_unknown_error
