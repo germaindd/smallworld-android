@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 
 /**
@@ -29,14 +30,15 @@ import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
+    viewModel: MapViewModel,
     modifier: Modifier = Modifier,
     scaffoldPaddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
-    val query = remember {
-        mutableStateOf("")
-    }
+    val state = viewModel.state.collectAsStateWithLifecycle()
     val active = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val searchBarPadding = 16.dp
+    val searchBarHeight = 56.dp
     Box(
         modifier
             .fillMaxSize()
@@ -46,13 +48,19 @@ fun MapScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            fragmentContainerView.getFragment<MapFragment>().setOnMapClickListener {
-                focusManager.clearFocus()
-                active.value = false
+            fragmentContainerView.getFragment<MapFragment>().apply {
+                setOnMapClickListener {
+                    focusManager.clearFocus()
+                    active.value = false
+                }
+                setCompassMargins(
+                    top = searchBarHeight + searchBarPadding * 2,
+                    right = searchBarPadding
+                )
             }
         }
-        DockedSearchBar(query = query.value,
-            onQueryChange = { query.value = it },
+        DockedSearchBar(query = state.value.query,
+            onQueryChange = viewModel::onQueryChange,
             onSearch = { focusManager.clearFocus() },
             active = active.value,
             onActiveChange = {
@@ -76,10 +84,11 @@ fun MapScreen(
                 Icon(
                     imageVector = Icons.Filled.Search, contentDescription = null
                 )
-            }) {
-            repeat(30) {
-                if (it != 0) Divider()
-                SearchItem(text = "jared1") {
+            }
+        ) {
+            state.value.searchResults.forEachIndexed { index, user ->
+                if (index != 0) Divider()
+                SearchItem(text = user.username) {
 
                 }
             }

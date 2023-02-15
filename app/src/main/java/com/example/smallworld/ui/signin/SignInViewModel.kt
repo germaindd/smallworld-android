@@ -55,9 +55,9 @@ class SignInViewModel @Inject constructor(
     fun onSubmit() {
         viewModelScope.launch {
             try {
-                val accessToken =
-                    authRepository.signIn(usernameOrEmail.value, password.value).accessToken
-                authService.setAccessToken(accessToken)
+                val accessTokens =
+                    authRepository.signIn(usernameOrEmail.value, password.value)
+                authService.setAccessTokens(accessTokens)
                 _onSignInSuccess.emit(Unit)
             } catch (e: HttpException) {
                 logError(e)

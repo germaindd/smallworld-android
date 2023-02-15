@@ -111,14 +111,14 @@ class SignUpViewModel @Inject constructor(
                     return@launch
                 }
                 if (usernameValidity == SignUpValidationResult.SUCCESS) {
-                    val signUpDto = try {
+                    val tokens = try {
                         authRepository.signUp(username.value, password.value, email.value)
                     } catch (e: Throwable) {
                         logError(e)
                         checkIfOfflineAndTriggerSnackbar()
                         return@launch
                     }
-                    authService.setAccessToken(signUpDto.accessToken)
+                    authService.setAccessTokens(tokens)
                     _onSignUpSuccess.emit(Unit)
                 } else _usernameError.value = usernameValidity
             }

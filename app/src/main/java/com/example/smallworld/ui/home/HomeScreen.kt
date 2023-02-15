@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smallworld.ui.map.MapScreen
 
 private enum class SelectedScreen(val icon: ImageVector, val contentDescription: String) {
@@ -43,7 +44,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
     ) { paddingValues ->
         when (selected.value) {
             SelectedScreen.MAP ->
-                MapScreen(Modifier.padding(paddingValues), paddingValues)
+                MapScreen(hiltViewModel(), Modifier.padding(paddingValues), paddingValues)
             SelectedScreen.NOTIFICATIONS -> Text("Yet to implement")
             SelectedScreen.SETTINGS -> Text("Yet to implement")
         }
