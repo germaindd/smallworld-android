@@ -50,13 +50,15 @@ private fun SignUpScreenOneContent(
 ) {
     Scaffold(
         topBar = { SignUpAppBar(onBackClick = onBackClick) },
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0) // see SnackbarContainer
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
             EmailTextField(
                 value = email,

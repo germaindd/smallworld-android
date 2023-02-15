@@ -50,13 +50,15 @@ private fun SignUpScreenTwoContent(
     LaunchedEffect(usernameFiledFocusRequester) { usernameFiledFocusRequester.requestFocus() }
     Scaffold(
         topBar = { SignUpAppBar(onBackClick = onBackClick) },
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0) // see SnackBarContainer
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
             UsernameTextField(
                 value = username,

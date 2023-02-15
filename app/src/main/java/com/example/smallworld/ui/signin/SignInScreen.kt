@@ -59,12 +59,14 @@ private fun SignInScreenContent(
                 }
             )
         },
+        contentWindowInsets = WindowInsets(0) // see SnackbarContainer
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
             OutlinedTextField(
                 value = usernameOrEmail,

@@ -1,5 +1,6 @@
 package com.example.smallworld.ui.home
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
@@ -37,10 +38,12 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                 }
             }
         },
-        modifier = modifier
+        modifier = modifier,
+        contentWindowInsets = WindowInsets(0) // see SnackbarContainer
     ) { paddingValues ->
         when (selected.value) {
-            SelectedScreen.MAP -> MapScreen(Modifier.padding(paddingValues))
+            SelectedScreen.MAP ->
+                MapScreen(Modifier.padding(paddingValues), paddingValues)
             SelectedScreen.NOTIFICATIONS -> Text("Yet to implement")
             SelectedScreen.SETTINGS -> Text("Yet to implement")
         }
