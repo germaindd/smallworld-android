@@ -1,67 +1,71 @@
 package com.example.smallworld.data.auth
 
-import com.example.smallworld.BuildConfig
-import com.example.smallworld.data.auth.models.JwtDto
+import com.example.smallworld.data.SmallWorldAuthApi
 import com.example.smallworld.services.AuthService
-import com.squareup.moshi.Moshi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.internal.EMPTY_REQUEST
+import retrofit2.HttpException
+import timber.log.Timber
 import java.net.HttpURLConnection
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 class AuthOkhttpInterceptor @Inject constructor(
     private val authService: AuthService,
-    private val okhttp: OkHttpClient
+    private val authApi: SmallWorldAuthApi
 ) : Interceptor {
-    private val jwtDtoAdapter = Moshi.Builder().build().adapter(JwtDto::class.java)
+    private val isRefreshingToken = AtomicBoolean()
+    private fun authenticateRequest(request: Request) = request
+        .newBuilder()
+        .addHeader("authorization", "Bearer ${authService.requireAccessToken()}")
+        .build()
 
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
+    override fun intercept(chain: Interceptor.Chain): Response = runBlocking {
+        while (isRefreshingToken.get()) delay(25)
 
-        if (request.url.toString().startsWith(BuildConfig.API_BASE_URL)
-            && request.url.pathSegments[0] != "auth"
-        ) {
-            val accessToken = authService.requireAccessToken()
-            val authenticatedRequest = request
-                .newBuilder()
-                .addHeader("authorization", "Bearer $accessToken")
-                .build()
-            val response = chain.proceed(authenticatedRequest)
-            if (response.isSuccessful
-                || response.code != HttpURLConnection.HTTP_UNAUTHORIZED
-            ) return response
-            response.close()
+        val uuid = UUID.randomUUID()
+        Timber.d("ID: $uuid \nRequesting ${chain.request().url}")
+        val response = chain.proceed(authenticateRequest(chain.request()))
+        if (response.isSuccessful || response.code != HttpURLConnection.HTTP_UNAUTHORIZED) {
+            Timber.d("ID: $uuid \nSuccessful response from ${chain.request().url}")
+            return@runBlocking response
+        }
+        response.close()
+        Timber.d("ID: $uuid \nUnauthorized response from ${chain.request().url}")
 
-            val refreshTokenRequest =
-                Request.Builder()
-                    .url("${BuildConfig.API_BASE_URL}auth/refresh-tokens")
-                    .post(EMPTY_REQUEST)
-                    .addHeader("authorization", "Bearer ${authService.requireRefreshToken()}")
-                    .build()
-            val newTokensResponse = okhttp.newCall(refreshTokenRequest).execute()
+        // atomically reads and updates the value of isRefreshingToken to true if it is indeed false,
+        // and returns whether or not it was false.
+        // see https://www.baeldung.com/java-volatile-variables-thread-safety explanation on atomic variables
+        val notAlreadyRefreshing = isRefreshingToken.compareAndSet(false, true)
 
-            if (newTokensResponse.isSuccessful) {
-                val responseBody = newTokensResponse.body
-                    ?: error("Missing respones body in 200 Success /auth/refresh-tokens response")
-                val tokens =
-                    jwtDtoAdapter
-                        .fromJson(responseBody.string())
-                        ?: error("Invalid json in /auth/refresh-tokens response")
+
+        when {
+            notAlreadyRefreshing -> {
+                Timber.d("ID: $uuid \nRefreshing tokens")
+                // request new tokens from server
+                val tokens = try {
+                    authApi.refreshTokens("Bearer ${authService.requireRefreshToken()}")
+                } catch (e: HttpException) {
+                    if (e.code() == HttpURLConnection.HTTP_UNAUTHORIZED)
+                        TODO("log the user out")
+                    else throw e // let the caller handle any unexpected exceptions
+                }
+
+                // update access tokens
                 authService.setAccessTokens(tokens)
-                val newRequest = request
-                    .newBuilder()
-                    .addHeader("authorization", "Bearer ${tokens.accessToken}")
-                    .build()
-
-                return chain.proceed(newRequest)
-            } else {
-                if (newTokensResponse.code == HttpURLConnection.HTTP_UNAUTHORIZED) TODO("log the user out")
-                TODO("Throw some sort of exception")
+                Timber.d("ID: $uuid \nToken refresh successful")
+                isRefreshingToken.set(false)
+            }
+            else -> {
+                Timber.d("ID: $uuid \nToken refresh in progress. Waiting...")
+                while (isRefreshingToken.get()) delay(25)
             }
         }
-        return chain.proceed(request)
+        Timber.d("ID: $uuid \nReattempting...")
+        chain.proceed(authenticateRequest(chain.request()))
     }
 }

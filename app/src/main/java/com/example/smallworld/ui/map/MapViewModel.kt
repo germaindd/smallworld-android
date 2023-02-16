@@ -35,7 +35,10 @@ class MapViewModel @Inject constructor(
     private val query: MutableStateFlow<String> = MutableStateFlow("")
 
     @OptIn(FlowPreview::class)
-    private val debouncedQuery = query.debounce(200)
+    private val debouncedQuery =
+        query
+            .debounce(100)
+            .shareIn(viewModelScope, SharingStarted.Eagerly)
 
     private val searchResults: Flow<List<User>> = debouncedQuery
         .map {
@@ -54,6 +57,7 @@ class MapViewModel @Inject constructor(
             }
         }
         .filterNotNull()
+        .shareIn(viewModelScope, SharingStarted.Eagerly)
 
     private val searchResultsState: Flow<MapSearchResultsState> =
         debouncedQuery.zip(searchResults) { query, searchResults ->

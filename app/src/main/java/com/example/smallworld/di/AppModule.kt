@@ -2,6 +2,7 @@ package com.example.smallworld.di
 
 import com.example.smallworld.BuildConfig
 import com.example.smallworld.data.SmallWorldApi
+import com.example.smallworld.data.SmallWorldAuthApi
 import com.example.smallworld.data.auth.AuthOkhttpInterceptor
 import dagger.Module
 import dagger.Provides
@@ -31,12 +32,20 @@ class AppModule {
 
     @Singleton
     @Provides
-    fun provideRetrofit(authInterceptor: AuthOkhttpInterceptor): SmallWorldApi =
+    fun provideAuthApi(okhttp: OkHttpClient): SmallWorldAuthApi =
         Retrofit.Builder()
-            .client(
-                OkHttpClient.Builder().addInterceptor(authInterceptor).build()
-            )
+            .baseUrl("${BuildConfig.API_BASE_URL}auth/")
+            .client(okhttp)
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+            .create(SmallWorldAuthApi::class.java)
+
+    @Singleton
+    @Provides
+    fun provideApi(authInterceptor: AuthOkhttpInterceptor): SmallWorldApi =
+        Retrofit.Builder()
             .baseUrl(BuildConfig.API_BASE_URL)
+            .client(OkHttpClient.Builder().addInterceptor(authInterceptor).build())
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(SmallWorldApi::class.java)

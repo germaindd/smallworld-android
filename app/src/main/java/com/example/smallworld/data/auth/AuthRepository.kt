@@ -1,6 +1,6 @@
 package com.example.smallworld.data.auth
 
-import com.example.smallworld.data.SmallWorldApi
+import com.example.smallworld.data.SmallWorldAuthApi
 import com.example.smallworld.data.auth.models.*
 import com.example.smallworld.di.DispatcherIO
 import kotlinx.coroutines.CoroutineDispatcher
@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
-    private val api: SmallWorldApi,
+    private val api: SmallWorldAuthApi,
     @DispatcherIO private val dispatcher: CoroutineDispatcher
 ) {
     suspend fun signUp(username: String, password: String, email: String): JwtDto =
