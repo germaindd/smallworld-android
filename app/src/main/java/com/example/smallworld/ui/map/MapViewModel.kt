@@ -2,6 +2,7 @@ package com.example.smallworld.ui.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.smallworld.data.profile.FriendshipStatus
 import com.example.smallworld.data.search.SearchRepository
 import com.example.smallworld.data.search.models.User
 import com.example.smallworld.services.NetworkService

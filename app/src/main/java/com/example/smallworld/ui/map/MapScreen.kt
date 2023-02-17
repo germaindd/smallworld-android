@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.R
+import com.example.smallworld.data.profile.FriendshipStatus
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
@@ -170,13 +171,6 @@ fun Profile(username: String, modifier: Modifier = Modifier) {
             FriendshipButton(FriendshipStatus.FRIENDS, modifier = Modifier.padding(top = 5.dp))
         }
     }
-}
-
-enum class FriendshipStatus {
-    NOT_FRIENDS,
-    OUTGOING_REQUEST,
-    INCOMING_REQUEST,
-    FRIENDS
 }
 
 @Composable
