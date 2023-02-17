@@ -27,4 +27,8 @@
     <string name="sign_in_invalid_sign_in">Invalid sign in. Try again?</string>
     <string name="sign_in_username_email">Username/Email</string>
     <string name="sign_up_unknown_error">Something went wrong. Please try again later.</string>
+    <string name="profile_add_friend_button_text">Add Friend</string>
+    <string name="profile_sent_request_button_text">Sent</string>
+    <string name="profile_accept_request_button_text">Accept</string>
+    <string name="profile_confirmed_friends_button_text">Friends</string>
 </resources>

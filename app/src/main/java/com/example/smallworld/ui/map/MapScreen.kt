@@ -14,11 +14,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.smallworld.R
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 import com.example.smallworld.ui.theme.SmallWorldTheme
 import kotlinx.coroutines.delay
@@ -192,12 +194,14 @@ private fun FriendshipButton(friendshipStatus: FriendshipStatus, modifier: Modif
             FriendshipStatus.INCOMING_REQUEST -> Icons.Filled.Mail
             FriendshipStatus.FRIENDS -> Icons.Filled.Group
         },
-        text = when (friendshipStatus) {
-            FriendshipStatus.NOT_FRIENDS -> "Add Friend"
-            FriendshipStatus.OUTGOING_REQUEST -> "Sent"
-            FriendshipStatus.INCOMING_REQUEST -> "Accept"
-            FriendshipStatus.FRIENDS -> "Friends"
-        },
+        text = stringResource(
+            when (friendshipStatus) {
+                FriendshipStatus.NOT_FRIENDS -> R.string.profile_add_friend_button_text
+                FriendshipStatus.OUTGOING_REQUEST -> R.string.profile_sent_request_button_text
+                FriendshipStatus.INCOMING_REQUEST -> R.string.profile_accept_request_button_text
+                FriendshipStatus.FRIENDS -> R.string.profile_confirmed_friends_button_text
+            }
+        ),
         color = when (friendshipStatus) {
             FriendshipStatus.NOT_FRIENDS,
             FriendshipStatus.INCOMING_REQUEST -> MaterialTheme.colorScheme.primary
