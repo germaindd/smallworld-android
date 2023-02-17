@@ -1,5 +1,6 @@
 package com.example.smallworld.ui.map
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,9 +11,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.R
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 import com.example.smallworld.ui.theme.SmallWorldTheme
-import kotlinx.coroutines.delay
 
 /**
  * Current requirement:
@@ -46,14 +48,6 @@ fun MapScreen(
     val focusManager = LocalFocusManager.current
     val bottomSheetState =
         rememberBottomSheetState(initialValue = ProfileBottomSheetVisibility.HIDDEN)
-    LaunchedEffect(bottomSheetState) {
-        repeat(10) {
-            delay(2000)
-            bottomSheetState.show()
-            delay(2000)
-            bottomSheetState.hide()
-        }
-    }
     Box(
         modifier.fillMaxSize()
     ) {
@@ -161,19 +155,19 @@ fun Profile(username: String, modifier: Modifier = Modifier) {
             imageVector = Icons.Filled.AccountCircle,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.outlineVariant,
-            modifier = Modifier.size(64.dp)
+            modifier = Modifier.size(80.dp)
         )
         Column(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .padding(start = 8.dp)
+                .padding(start = 10.dp)
                 .fillMaxHeight(),
         ) {
             Text(
                 text = username,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
             )
-            FriendshipButton(FriendshipStatus.FRIENDS, modifier = Modifier.padding(top = 4.dp))
+            FriendshipButton(FriendshipStatus.FRIENDS, modifier = Modifier.padding(top = 5.dp))
         }
     }
 }
@@ -209,10 +203,10 @@ private fun FriendshipButton(friendshipStatus: FriendshipStatus, modifier: Modif
             FriendshipStatus.FRIENDS -> MaterialTheme.colorScheme.surfaceVariant
         },
         enabled = when (friendshipStatus) {
-            FriendshipStatus.FRIENDS -> true
+            FriendshipStatus.NOT_FRIENDS -> true
             FriendshipStatus.OUTGOING_REQUEST,
             FriendshipStatus.INCOMING_REQUEST,
-            FriendshipStatus.NOT_FRIENDS -> false
+            FriendshipStatus.FRIENDS -> false
         },
         modifier = modifier
     )
@@ -226,29 +220,29 @@ private fun ProfileIconButton(
     enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Box(
         modifier = modifier
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(color)
             .run {
                 if (enabled) clickable {} else this
-            },
-        shape = MaterialTheme.shapes.extraLarge,
-        color = color
+            }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(
-                start = 6.dp, top = 3.dp, end = 10.dp, bottom = 3.dp
+                start = 9.dp, top = 4.dp, end = 15.dp, bottom = 4.dp
             )
         ) {
-
+            val iconSizeDp = with(LocalDensity.current) { 20.sp.toDp() }
             Icon(
                 imageVector = imageVector,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(iconSizeDp)
             )
             Text(
                 text,
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                modifier = Modifier.padding(start = 4.dp)
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(start = 6.dp)
             )
         }
     }
