@@ -7,11 +7,11 @@ import com.example.smallworld.services.AuthService
 import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
-import com.example.smallworld.util.logError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import timber.log.Timber
 import java.net.HttpURLConnection
 import javax.inject.Inject
 
@@ -60,7 +60,7 @@ class SignInViewModel @Inject constructor(
                 authService.setAccessTokens(accessTokens)
                 _onSignInSuccess.emit(Unit)
             } catch (e: HttpException) {
-                logError(e)
+                Timber.e(e)
                 val message = when (e.code()) {
                     HttpURLConnection.HTTP_BAD_REQUEST,
                     HttpURLConnection.HTTP_UNAUTHORIZED -> SnackBarMessage.SIGN_IN_ERROR_UNAUTHORIZED
@@ -68,7 +68,7 @@ class SignInViewModel @Inject constructor(
                 }
                 snackBarMessageBus.sendMessage(message)
             } catch (e: Throwable) {
-                logError(e)
+                Timber.e(e)
                 snackBarMessageBus.sendMessage(
                     if (!networkService.isOnlineStateFlow.value)
                         SnackBarMessage.NO_NETWORK

@@ -8,7 +8,6 @@ import com.example.smallworld.services.AuthService
 import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
-import com.example.smallworld.util.logError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -65,7 +65,7 @@ class SignUpViewModel @Inject constructor(
                     authRepository.validateEmailPassword(email.value, password.value)
                 } catch (error: Throwable) {
                     checkIfOfflineAndTriggerSnackbar()
-                    logError(error)
+                    Timber.e(error)
                     return@launch
                 }
                 if (
@@ -106,7 +106,7 @@ class SignUpViewModel @Inject constructor(
                 val usernameValidity = try {
                     authRepository.validateUsername(username.value)
                 } catch (e: Throwable) {
-                    logError(e)
+                    Timber.e(e)
                     checkIfOfflineAndTriggerSnackbar()
                     return@launch
                 }
@@ -114,7 +114,7 @@ class SignUpViewModel @Inject constructor(
                     val tokens = try {
                         authRepository.signUp(username.value, password.value, email.value)
                     } catch (e: Throwable) {
-                        logError(e)
+                        Timber.e(e)
                         checkIfOfflineAndTriggerSnackbar()
                         return@launch
                     }

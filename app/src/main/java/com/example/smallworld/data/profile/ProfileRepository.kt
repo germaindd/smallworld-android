@@ -10,7 +10,7 @@ class ProfileRepository @Inject constructor(
     private val api: SmallWorldApi,
     @DispatcherIO private val dispatcher: CoroutineDispatcher
 ) {
-    suspend fun getProfile(userId: String) = withContext(dispatcher) {
-        api.getProfile(userId)
+    suspend fun getProfile(userId: String): Profile = withContext(dispatcher) {
+        api.getProfile(userId).toProfile()
     }
 }

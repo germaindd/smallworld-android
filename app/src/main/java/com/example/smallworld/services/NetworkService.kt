@@ -32,6 +32,7 @@ class NetworkService @Inject constructor(
                 networkCapabilities: NetworkCapabilities
             ) {
                 if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                 ) {
                     coroutineScope.launch { _isOnline.value = true }
                 }
