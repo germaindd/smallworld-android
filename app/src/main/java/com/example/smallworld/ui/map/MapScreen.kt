@@ -5,10 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
+import com.example.smallworld.ui.theme.SmallWorldTheme
 import kotlinx.coroutines.delay
 
 /**
@@ -171,33 +169,69 @@ fun Profile(username: String, modifier: Modifier = Modifier) {
                 text = username,
                 style = MaterialTheme.typography.titleSmall,
             )
-            AddFriendButton(modifier = Modifier.padding(top = 4.dp))
+            AddFriendButton(FriendshipStatus.FRIENDS, modifier = Modifier.padding(top = 4.dp))
         }
     }
 }
 
+enum class FriendshipStatus {
+    NOT_FRIENDS,
+    OUTGOING_REQUEST,
+    INCOMING_REQUEST,
+    FRIENDS
+}
+
 @Composable
-private fun AddFriendButton(modifier: Modifier = Modifier) {
+private fun AddFriendButton(friendshipStatus: FriendshipStatus, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.clickable { },
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primary
+        color = when (friendshipStatus) {
+            FriendshipStatus.NOT_FRIENDS,
+            FriendshipStatus.INCOMING_REQUEST -> MaterialTheme.colorScheme.primary
+            FriendshipStatus.OUTGOING_REQUEST,
+            FriendshipStatus.FRIENDS -> MaterialTheme.colorScheme.surfaceVariant
+        }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(
                 start = 6.dp, top = 3.dp, end = 10.dp, bottom = 3.dp
             )
         ) {
+
             Icon(
-                imageVector = Icons.Filled.Add,
+                imageVector = when (friendshipStatus) {
+                    FriendshipStatus.NOT_FRIENDS -> Icons.Filled.PersonAdd
+                    FriendshipStatus.OUTGOING_REQUEST -> Icons.Filled.Done
+                    FriendshipStatus.INCOMING_REQUEST -> Icons.Filled.Mail
+                    FriendshipStatus.FRIENDS -> Icons.Filled.Group
+                },
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                "Add Friend",
+                when (friendshipStatus) {
+                    FriendshipStatus.NOT_FRIENDS -> "Add Friend"
+                    FriendshipStatus.OUTGOING_REQUEST -> "Sent"
+                    FriendshipStatus.INCOMING_REQUEST -> "Accept"
+                    FriendshipStatus.FRIENDS -> "Friends"
+                },
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                 modifier = Modifier.padding(start = 4.dp)
             )
+        }
+    }
+}
+
+@Preview(widthDp = 300)
+@Composable
+fun PreviewAddFriendButton() {
+    SmallWorldTheme {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            AddFriendButton(FriendshipStatus.NOT_FRIENDS)
+            AddFriendButton(FriendshipStatus.OUTGOING_REQUEST)
+            AddFriendButton(FriendshipStatus.INCOMING_REQUEST)
+            AddFriendButton(FriendshipStatus.FRIENDS)
         }
     }
 }
