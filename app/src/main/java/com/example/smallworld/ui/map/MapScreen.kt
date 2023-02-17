@@ -10,9 +10,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SentimentDissatisfied
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -23,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
+import kotlinx.coroutines.delay
 
 /**
  * Current requirement:
@@ -32,26 +31,32 @@ import com.example.smallworld.databinding.LayoutFragmentContainerBinding
  * I could try to
  * - set a timer to see if the window insets change when i
  */
+private val searchBarHeight = 56.dp
+private val searchBarPadding = 16.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel,
-    modifier: Modifier = Modifier
+    viewModel: MapViewModel, modifier: Modifier = Modifier
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
     val active = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val searchBarPadding = 16.dp
-    val searchBarHeight = 56.dp
+    val bottomSheetState =
+        rememberBottomSheetState(initialValue = ProfileBottomSheetVisibility.HIDDEN)
+    LaunchedEffect(bottomSheetState) {
+        repeat(10) {
+            delay(2000)
+            bottomSheetState.show()
+            delay(2000)
+            bottomSheetState.hide()
+        }
+    }
     Box(
-        modifier
-            .fillMaxSize()
+        modifier.fillMaxSize()
     ) {
         AndroidViewBinding(
-            LayoutFragmentContainerBinding::inflate,
-            modifier = Modifier
-                .fillMaxSize()
+            LayoutFragmentContainerBinding::inflate, modifier = Modifier.fillMaxSize()
         ) {
             fragmentContainerView.getFragment<MapFragment>().apply {
                 setOnMapClickListener {
@@ -60,8 +65,7 @@ fun MapScreen(
                     viewModel.onQueryChange("")
                 }
                 setCompassMargins(
-                    top = searchBarHeight + searchBarPadding * 2,
-                    right = searchBarPadding
+                    top = searchBarHeight + searchBarPadding * 2, right = searchBarPadding
                 )
             }
         }
@@ -86,8 +90,7 @@ fun MapScreen(
                 Icon(
                     imageVector = Icons.Filled.Search, contentDescription = null
                 )
-            }
-        ) {
+            }) {
             when (state.value.searchResultsState) {
                 MapSearchResultsState.NO_QUERY -> {
                     Column(
@@ -131,19 +134,16 @@ fun MapScreen(
                         )
                     }
                 }
-                MapSearchResultsState.RESULTS ->
-                    LazyColumn {
-                        itemsIndexed(state.value.searchResults) { index, user ->
-                            if (index != 0) Divider()
-                            SearchItem(text = user.username) {}
-                        }
+                MapSearchResultsState.RESULTS -> LazyColumn {
+                    itemsIndexed(state.value.searchResults) { index, user ->
+                        if (index != 0) Divider()
+                        SearchItem(text = user.username) {}
                     }
+                }
             }
         }
-        ProfileBottomSheet(
-            bottomSheetVisibility = ProfileBottomSheetVisibility.HIDDEN,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            onDismiss = {},
+        BottomSheet(
+            modifier = Modifier.align(Alignment.BottomCenter), bottomSheetState = bottomSheetState
         ) { Profile("jared") }
     }
 }
@@ -179,18 +179,13 @@ fun Profile(username: String, modifier: Modifier = Modifier) {
 @Composable
 private fun AddFriendButton(modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier
-            .clickable { },
+        modifier = modifier.clickable { },
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.primary
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(
-                start = 6.dp,
-                top = 3.dp,
-                end = 10.dp,
-                bottom = 3.dp
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(
+                start = 6.dp, top = 3.dp, end = 10.dp, bottom = 3.dp
             )
         ) {
             Icon(
