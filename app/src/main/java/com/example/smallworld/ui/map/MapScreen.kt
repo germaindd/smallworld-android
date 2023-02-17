@@ -1,22 +1,25 @@
 package com.example.smallworld.ui.map
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SentimentDissatisfied
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
@@ -137,7 +140,77 @@ fun MapScreen(
                     }
             }
         }
+        ProfileBottomSheet(
+            bottomSheetVisibility = ProfileBottomSheetVisibility.HIDDEN,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            onDismiss = {},
+        ) { Profile("jared") }
     }
+}
+
+@Composable
+fun Profile(username: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier
+            .padding(horizontal = 16.dp)
+            .height(IntrinsicSize.Min)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.AccountCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.size(64.dp)
+        )
+        Column(
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .fillMaxHeight(),
+        ) {
+            Text(
+                text = username,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            AddFriendButton(modifier = Modifier.padding(top = 4.dp))
+        }
+    }
+}
+
+@Composable
+private fun AddFriendButton(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier
+            .clickable { },
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primary
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(
+                start = 6.dp,
+                top = 3.dp,
+                end = 10.dp,
+                bottom = 3.dp
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                "Add Friend",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 300)
+@Composable
+fun ProfilePreview() {
+    Profile(username = "jared")
 }
 
 @Composable
@@ -145,7 +218,6 @@ fun SearchItem(text: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .clickable(onClick = onClick)
-            .background(MaterialTheme.colorScheme.surface)
             .fillMaxWidth()
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
