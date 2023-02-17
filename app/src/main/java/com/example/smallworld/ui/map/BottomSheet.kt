@@ -22,29 +22,29 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
-enum class ProfileBottomSheetVisibility {
+enum class BottomSheetVisibility {
     HIDDEN, SHOWING
 }
 
 @Stable
 class BottomSheetState(
-    val swipeableState: SwipeableState<ProfileBottomSheetVisibility>
+    val swipeableState: SwipeableState<BottomSheetVisibility>
 ) {
-    private suspend fun animateTo(visibility: ProfileBottomSheetVisibility) {
+    private suspend fun animateTo(visibility: BottomSheetVisibility) {
         swipeableState.animateTo(
             visibility,
             spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMediumLow)
         )
     }
 
-    suspend fun show() = animateTo(ProfileBottomSheetVisibility.SHOWING)
+    suspend fun show() = animateTo(BottomSheetVisibility.SHOWING)
 
-    suspend fun hide() = animateTo(ProfileBottomSheetVisibility.HIDDEN)
+    suspend fun hide() = animateTo(BottomSheetVisibility.HIDDEN)
 
 }
 
 @Composable
-fun rememberBottomSheetState(initialValue: ProfileBottomSheetVisibility): BottomSheetState {
+fun rememberBottomSheetState(initialValue: BottomSheetVisibility): BottomSheetState {
     val swipeableState = rememberSwipeableState(initialValue = initialValue)
     return remember(initialValue) {
         BottomSheetState(swipeableState)
@@ -67,8 +67,8 @@ fun BottomSheet(
     val anchors = remember(contentSize) {
         derivedStateOf { }
         mapOf(
-            0f to ProfileBottomSheetVisibility.SHOWING,
-            contentSize.value to ProfileBottomSheetVisibility.HIDDEN,
+            0f to BottomSheetVisibility.SHOWING,
+            contentSize.value to BottomSheetVisibility.HIDDEN,
         )
     }
     Surface(
@@ -122,7 +122,7 @@ fun PreviewDragHandle() {
 @Composable
 fun PreviewBottomSheet() {
     BottomSheet(
-        bottomSheetState = rememberBottomSheetState(initialValue = ProfileBottomSheetVisibility.SHOWING)
+        bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetVisibility.SHOWING)
     ) {
         Box(Modifier.height(300.dp))
     }

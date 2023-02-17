@@ -47,7 +47,7 @@ fun MapScreen(
     val active = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val bottomSheetState =
-        rememberBottomSheetState(initialValue = ProfileBottomSheetVisibility.HIDDEN)
+        rememberBottomSheetState(initialValue = BottomSheetVisibility.HIDDEN)
     Box(
         modifier.fillMaxSize()
     ) {

@@ -20,10 +20,13 @@ enum class MapSearchResultsState {
     RESULTS
 }
 
-data class MapScreenState(
+sealed class MapScreenState(
     val query: String = "",
     val searchResults: List<User> = emptyList(),
-    val searchResultsState: MapSearchResultsState = MapSearchResultsState.NO_QUERY
+    val searchResultsState: MapSearchResultsState = MapSearchResultsState.NO_QUERY,
+    val profileBottomSheetVisibility: BottomSheetVisibility,
+    val profileUsername: String,
+    val profileFriendshipStatus: FriendshipStatus
 )
 
 @HiltViewModel
@@ -85,5 +88,17 @@ class MapViewModel @Inject constructor(
 
     fun onQueryChange(value: String) {
         query.value = value
+    }
+
+    fun onSearchItemClick(id: User) {
+
+    }
+
+    fun onFriendButtonClick() {
+
+    }
+
+    fun onProfileDismiss() {
+
     }
 }
