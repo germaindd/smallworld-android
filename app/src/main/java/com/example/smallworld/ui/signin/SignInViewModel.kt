@@ -60,7 +60,7 @@ class SignInViewModel @Inject constructor(
                 authService.setAccessTokens(accessTokens)
                 _onSignInSuccess.emit(Unit)
             } catch (e: HttpException) {
-                Timber.e(e)
+                Timber.d(e)
                 val message = when (e.code()) {
                     HttpURLConnection.HTTP_BAD_REQUEST,
                     HttpURLConnection.HTTP_UNAUTHORIZED -> SnackBarMessage.SIGN_IN_ERROR_UNAUTHORIZED
@@ -68,12 +68,12 @@ class SignInViewModel @Inject constructor(
                 }
                 snackBarMessageBus.sendMessage(message)
             } catch (e: Throwable) {
-                Timber.e(e)
-                snackBarMessageBus.sendMessage(
-                    if (!networkService.isOnlineStateFlow.value)
-                        SnackBarMessage.NO_NETWORK
-                    else SnackBarMessage.SIGN_IN_ERROR_UNKNOWN
-                )
+                if (!networkService.isOnlineStateFlow.value)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
+                else {
+                    Timber.d(e)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.SIGN_IN_ERROR_UNKNOWN)
+                }
             }
         }
     }

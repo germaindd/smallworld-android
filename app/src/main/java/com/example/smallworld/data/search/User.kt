@@ -1,4 +1,4 @@
-package com.example.smallworld.data.search.models
+package com.example.smallworld.data.search
 
 data class User(
     val id: String,

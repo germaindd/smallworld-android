@@ -3,7 +3,7 @@ package com.example.smallworld.data
 import com.example.smallworld.data.auth.models.*
 import com.example.smallworld.data.friends.SendRequestDto
 import com.example.smallworld.data.profile.ProfileDto
-import com.example.smallworld.data.search.models.UserDto
+import com.example.smallworld.data.search.UserDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

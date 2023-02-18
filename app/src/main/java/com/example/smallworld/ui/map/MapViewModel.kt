@@ -3,12 +3,13 @@ package com.example.smallworld.ui.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.friends.FriendsRepository
-import com.example.smallworld.data.profile.FriendshipStatus
 import com.example.smallworld.data.profile.Profile
 import com.example.smallworld.data.profile.ProfileRepository
+import com.example.smallworld.data.profile.models.FriendshipStatus
 import com.example.smallworld.data.search.SearchRepository
-import com.example.smallworld.data.search.models.User
+import com.example.smallworld.data.search.User
 import com.example.smallworld.services.NetworkService
+import com.example.smallworld.ui.map.components.BottomSheetVisibility
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel

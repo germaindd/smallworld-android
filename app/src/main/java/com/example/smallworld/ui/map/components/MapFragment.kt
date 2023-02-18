@@ -1,4 +1,4 @@
-package com.example.smallworld.ui.map
+package com.example.smallworld.ui.map.components
 
 import android.os.Bundle
 import android.view.LayoutInflater

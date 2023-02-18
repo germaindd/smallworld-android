@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialApi::class)
 
-package com.example.smallworld.ui.map
+package com.example.smallworld.ui.map.components
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -13,7 +13,10 @@ import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -26,10 +29,13 @@ enum class BottomSheetVisibility {
     HIDDEN, SHOWING
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Stable
 class BottomSheetState(
     val swipeableState: SwipeableState<BottomSheetVisibility>
 ) {
+    val currentVisibility get() = swipeableState.currentValue
+
     private suspend fun animateTo(visibility: BottomSheetVisibility) {
         swipeableState.animateTo(
             visibility, spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMediumLow)
@@ -42,6 +48,7 @@ class BottomSheetState(
 
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun rememberBottomSheetState(initialValue: BottomSheetVisibility): BottomSheetState {
     val swipeableState = rememberSwipeableState(initialValue = initialValue)
