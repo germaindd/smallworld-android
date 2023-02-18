@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterialApi::class)
+
 package com.example.smallworld.ui.map
 
 import androidx.compose.foundation.background
@@ -5,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,17 +28,11 @@ import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.R
 import com.example.smallworld.data.profile.FriendshipStatus
+import com.example.smallworld.data.profile.Profile
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 import com.example.smallworld.ui.theme.SmallWorldTheme
+import kotlinx.coroutines.flow.collectLatest
 
-/**
- * Current requirement:
- * - make the maximum go down to the keyboard
- * -
- *
- * I could try to
- * - set a timer to see if the window insets change when i
- */
 private val searchBarHeight = 56.dp
 private val searchBarPadding = 16.dp
 
@@ -45,10 +42,25 @@ fun MapScreen(
     viewModel: MapViewModel, modifier: Modifier = Modifier
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
-    val active = remember { mutableStateOf(false) }
+    val searchBarActive = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val bottomSheetState =
-        rememberBottomSheetState(initialValue = BottomSheetVisibility.HIDDEN)
+        rememberBottomSheetState(initialValue = state.value.bottomSheetVisibility)
+    LaunchedEffect(viewModel, bottomSheetState) {
+        viewModel.moveBottomSheet.collectLatest {
+            if (it != bottomSheetState.swipeableState.currentValue || it != bottomSheetState.swipeableState.targetValue) {
+                when (it) {
+                    BottomSheetVisibility.HIDDEN -> bottomSheetState.hide()
+                    BottomSheetVisibility.SHOWING -> {
+                        bottomSheetState.show()
+                    }
+                }
+            }
+        }
+    }
+    LaunchedEffect(bottomSheetState.swipeableState.currentValue) {
+        viewModel.onSheetVisbilityChanged(bottomSheetState.swipeableState.currentValue)
+    }
     Box(
         modifier.fillMaxSize()
     ) {
@@ -58,8 +70,7 @@ fun MapScreen(
             fragmentContainerView.getFragment<MapFragment>().apply {
                 setOnMapClickListener {
                     focusManager.clearFocus()
-                    active.value = false
-                    viewModel.onQueryChange("")
+                    searchBarActive.value = false
                 }
                 setCompassMargins(
                     top = searchBarHeight + searchBarPadding * 2, right = searchBarPadding
@@ -69,10 +80,10 @@ fun MapScreen(
         DockedSearchBar(query = state.value.query,
             onQueryChange = viewModel::onQueryChange,
             onSearch = { focusManager.clearFocus() },
-            active = active.value,
+            active = searchBarActive.value,
             onActiveChange = {
-                active.value = it
-                if (!active.value) focusManager.clearFocus()
+                searchBarActive.value = it
+                if (!searchBarActive.value) focusManager.clearFocus()
             },
             modifier = Modifier
                 .imePadding()
@@ -134,19 +145,34 @@ fun MapScreen(
                 MapSearchResultsState.RESULTS -> LazyColumn {
                     itemsIndexed(state.value.searchResults) { index, user ->
                         if (index != 0) Divider()
-                        SearchItem(text = user.username) {}
+                        SearchItem(text = user.username) {
+                            focusManager.clearFocus()
+                            searchBarActive.value = false
+                            viewModel.onSearchItemClick(user)
+                        }
                     }
                 }
             }
         }
         BottomSheet(
             modifier = Modifier.align(Alignment.BottomCenter), bottomSheetState = bottomSheetState
-        ) { Profile("jared") }
+        ) {
+            state.value.profile?.let {
+                ProfileComponent(
+                    it,
+                    onFriendshipButtonClick = viewModel::onFriendButtonClick
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun Profile(username: String, modifier: Modifier = Modifier) {
+private fun ProfileComponent(
+    profile: Profile,
+    onFriendshipButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier
             .padding(horizontal = 16.dp)
@@ -165,16 +191,24 @@ fun Profile(username: String, modifier: Modifier = Modifier) {
                 .fillMaxHeight(),
         ) {
             Text(
-                text = username,
+                text = profile.username,
                 style = MaterialTheme.typography.titleMedium,
             )
-            FriendshipButton(FriendshipStatus.FRIENDS, modifier = Modifier.padding(top = 5.dp))
+            FriendshipButton(
+                profile.friendshipStatus,
+                modifier = Modifier.padding(top = 5.dp),
+                onClick = onFriendshipButtonClick
+            )
         }
     }
 }
 
 @Composable
-private fun FriendshipButton(friendshipStatus: FriendshipStatus, modifier: Modifier = Modifier) {
+private fun FriendshipButton(
+    friendshipStatus: FriendshipStatus,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     ProfileIconButton(
         imageVector = when (friendshipStatus) {
             FriendshipStatus.NOT_FRIENDS -> Icons.Filled.PersonAdd
@@ -202,6 +236,7 @@ private fun FriendshipButton(friendshipStatus: FriendshipStatus, modifier: Modif
             FriendshipStatus.INCOMING_REQUEST,
             FriendshipStatus.FRIENDS -> false
         },
+        onClick = onClick,
         modifier = modifier
     )
 }
@@ -212,6 +247,7 @@ private fun ProfileIconButton(
     text: String,
     color: Color,
     enabled: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -219,7 +255,7 @@ private fun ProfileIconButton(
             .clip(MaterialTheme.shapes.extraLarge)
             .background(color)
             .run {
-                if (enabled) clickable {} else this
+                if (enabled) clickable(onClick = onClick) else this
             }
     ) {
         Row(
@@ -248,10 +284,10 @@ private fun ProfileIconButton(
 fun PreviewAddFriendButton() {
     SmallWorldTheme {
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            FriendshipButton(FriendshipStatus.NOT_FRIENDS)
-            FriendshipButton(FriendshipStatus.OUTGOING_REQUEST)
-            FriendshipButton(FriendshipStatus.INCOMING_REQUEST)
-            FriendshipButton(FriendshipStatus.FRIENDS)
+            FriendshipButton(FriendshipStatus.NOT_FRIENDS, onClick = {})
+            FriendshipButton(FriendshipStatus.OUTGOING_REQUEST, onClick = {})
+            FriendshipButton(FriendshipStatus.INCOMING_REQUEST, onClick = {})
+            FriendshipButton(FriendshipStatus.FRIENDS, onClick = {})
         }
     }
 }
@@ -259,7 +295,9 @@ fun PreviewAddFriendButton() {
 @Preview(widthDp = 300)
 @Composable
 fun ProfilePreview() {
-    Profile(username = "jared")
+    ProfileComponent(
+        Profile("", "jared", FriendshipStatus.NOT_FRIENDS),
+        onFriendshipButtonClick = {})
 }
 
 @Composable

@@ -3,6 +3,7 @@ package com.example.smallworld.ui.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.friends.FriendsRepository
+import com.example.smallworld.data.profile.FriendshipStatus
 import com.example.smallworld.data.profile.Profile
 import com.example.smallworld.data.profile.ProfileRepository
 import com.example.smallworld.data.search.SearchRepository
@@ -27,7 +28,7 @@ data class MapScreenState(
     val query: String = "",
     val searchResults: List<User> = emptyList(),
     val searchResultsState: MapSearchResultsState = MapSearchResultsState.NO_QUERY,
-    val profileBottomSheetVisibility: BottomSheetVisibility = BottomSheetVisibility.HIDDEN,
+    val bottomSheetVisibility: BottomSheetVisibility = BottomSheetVisibility.HIDDEN,
     val profile: Profile? = null,
 )
 
@@ -37,7 +38,7 @@ class MapViewModel @Inject constructor(
     private val networkService: NetworkService,
     private val snackBarMessageBus: SnackBarMessageBus,
     private val profileRepository: ProfileRepository,
-    private val friendsRespository: FriendsRepository
+    private val friendsRepository: FriendsRepository
 ) : ViewModel() {
     private val query: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -78,20 +79,18 @@ class MapViewModel @Inject constructor(
     private val bottomSheetVisibility = MutableStateFlow(BottomSheetVisibility.HIDDEN)
     private val profile = MutableStateFlow<Profile?>(null)
 
-    private val _state = MutableStateFlow(MapScreenState())
-    val state: StateFlow<MapScreenState> = _state
+    private val _moveBottomSheet = MutableSharedFlow<BottomSheetVisibility>()
+    val moveBottomSheet: SharedFlow<BottomSheetVisibility> = _moveBottomSheet
 
-    init {
-        viewModelScope.launch {
-            combine(
-                query,
-                searchResults,
-                searchResultsState
-            ) { query, searchResults, searchResultsState ->
-                MapScreenState(query, searchResults, searchResultsState)
-            }.collect { _state.value = it }
-        }
-    }
+    val state: StateFlow<MapScreenState> = combine(
+        query,
+        searchResults,
+        searchResultsState,
+        bottomSheetVisibility,
+        profile
+    ) { query, searchResults, searchResultsState, bottomSheetVisibility, profile ->
+        MapScreenState(query, searchResults, searchResultsState, bottomSheetVisibility, profile)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MapScreenState())
 
     fun onQueryChange(value: String) {
         query.value = value
@@ -111,15 +110,18 @@ class MapViewModel @Inject constructor(
                 return@launch
             }
 
-            bottomSheetVisibility.value = BottomSheetVisibility.SHOWING
+            _moveBottomSheet.emit(BottomSheetVisibility.SHOWING)
             profile.value = profileResponse
         }
     }
 
-    fun onFriendButtonClick(userId: String) {
+    fun onFriendButtonClick() {
         viewModelScope.launch {
+            val userId = profile.value?.userId ?: return@launch
             try {
-                friendsRespository.sendRequest(userId)
+                friendsRepository.sendRequest(userId)
+                profile.value =
+                    profile.value?.copy(friendshipStatus = FriendshipStatus.OUTGOING_REQUEST)
             } catch (e: Throwable) {
                 if (networkService.isOnlineStateFlow.value) {
                     Timber.e(e)
@@ -132,8 +134,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun onProfileDismiss() {
-        bottomSheetVisibility.value = BottomSheetVisibility.HIDDEN
-        profile.value = null
+    fun onSheetVisbilityChanged(visibility: BottomSheetVisibility) {
+        bottomSheetVisibility.value = visibility
     }
 }

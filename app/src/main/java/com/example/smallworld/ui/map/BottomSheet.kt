@@ -32,8 +32,7 @@ class BottomSheetState(
 ) {
     private suspend fun animateTo(visibility: BottomSheetVisibility) {
         swipeableState.animateTo(
-            visibility,
-            spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMediumLow)
+            visibility, spring(Spring.DampingRatioLowBouncy, Spring.StiffnessMediumLow)
         )
     }
 
@@ -46,16 +45,13 @@ class BottomSheetState(
 @Composable
 fun rememberBottomSheetState(initialValue: BottomSheetVisibility): BottomSheetState {
     val swipeableState = rememberSwipeableState(initialValue = initialValue)
-    return remember(initialValue) {
+    return remember(swipeableState) {
         BottomSheetState(swipeableState)
     }
 }
 
 private val extraSpaceForBounce = 100.dp
 
-/**
- *
- */
 @Composable
 fun BottomSheet(
     bottomSheetState: BottomSheetState,
@@ -63,9 +59,8 @@ fun BottomSheet(
     content: @Composable (ColumnScope.() -> Unit),
 ) {
 
-    val contentSize = remember { mutableStateOf(0f) }
-    val anchors = remember(contentSize) {
-        derivedStateOf { }
+    val contentSize = remember { mutableStateOf(200f) }
+    val anchors = remember(contentSize.value) {
         mapOf(
             0f to BottomSheetVisibility.SHOWING,
             contentSize.value to BottomSheetVisibility.HIDDEN,
@@ -94,7 +89,8 @@ fun BottomSheet(
             .fillMaxWidth()
             .padding(bottom = extraSpaceForBounce)
             .onGloballyPositioned { contentSize.value = it.size.height.toFloat() }
-            .padding(bottom = 8.dp)) {
+            .padding(bottom = 8.dp))
+        {
             DragHandle(modifier = Modifier.align(Alignment.CenterHorizontally))
             content()
         }
