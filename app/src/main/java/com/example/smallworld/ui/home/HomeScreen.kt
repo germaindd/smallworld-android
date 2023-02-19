@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smallworld.ui.map.MapScreen
+import com.example.smallworld.ui.notifications.NotificationsScreen
 
 private enum class SelectedScreen(val icon: ImageVector, val contentDescription: String) {
     MAP(Icons.Filled.Public, "View Map"),
@@ -52,7 +53,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                         .padding(paddingValues)
                         .consumeWindowInsets(paddingValues)
                 )
-            SelectedScreen.NOTIFICATIONS -> Text("Yet to implement")
+            SelectedScreen.NOTIFICATIONS -> NotificationsScreen()
             SelectedScreen.SETTINGS -> Text("Yet to implement")
         }
     }
