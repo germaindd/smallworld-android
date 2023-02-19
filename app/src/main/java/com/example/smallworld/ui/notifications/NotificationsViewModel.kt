@@ -31,7 +31,7 @@ class NotificationsViewModel @Inject constructor(
 ) : ViewModel() {
     private var prevState: NotificationsScreenState = NotificationsScreenState.Loading
 
-    private val state: MutableStateFlow<NotificationsScreenState> =
+    val state: MutableStateFlow<NotificationsScreenState> =
         MutableStateFlow(NotificationsScreenState.Loading)
 
     init {
@@ -39,7 +39,7 @@ class NotificationsViewModel @Inject constructor(
     }
 
 
-    private fun refreshRequests() {
+    fun refreshRequests() {
         prevState = state.value
         state.value = NotificationsScreenState.Loading
         viewModelScope.launch {
@@ -61,6 +61,27 @@ class NotificationsViewModel @Inject constructor(
                 return@launch
             }
             state.value = NotificationsScreenState.Loaded(requests)
+        }
+    }
+
+    fun acceptRequest(acceptingRequest: FriendRequest) {
+        viewModelScope.launch {
+            try {
+                friendsRepository.acceptRequest(acceptingRequest.userId)
+            } catch (e: Throwable) {
+                if (networkService.isOnlineStateFlow.value) {
+                    Timber.e(e)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+                } else {
+                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
+                }
+                return@launch
+            }
+            (state.value as? NotificationsScreenState.Loaded)
+                ?.let { loadedState ->
+                    state.value =
+                        NotificationsScreenState.Loaded(loadedState.friendRequests.filter { it.userId != acceptingRequest.userId })
+                }
         }
     }
 }

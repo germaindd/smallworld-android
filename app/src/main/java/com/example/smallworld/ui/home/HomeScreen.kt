@@ -53,7 +53,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                         .padding(paddingValues)
                         .consumeWindowInsets(paddingValues)
                 )
-            SelectedScreen.NOTIFICATIONS -> NotificationsScreen()
+            SelectedScreen.NOTIFICATIONS -> NotificationsScreen(hiltViewModel())
             SelectedScreen.SETTINGS -> Text("Yet to implement")
         }
     }

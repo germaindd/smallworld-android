@@ -34,4 +34,7 @@
     <string name="profile_sent_request_button_text">Sent</string>
     <string name="profile_accept_request_button_text">Accept</string>
     <string name="profile_confirmed_friends_button_text">Friends</string>
+
+    <string name="notifications_accept_request_button_text">Accept</string>
+    <string name="notifications_decline_request_button_text">Decline</string>
 </resources>
