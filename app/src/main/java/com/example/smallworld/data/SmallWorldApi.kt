@@ -22,7 +22,7 @@ interface SmallWorldApi {
     @GET("friends/requests")
     suspend fun getRequests(): List<FriendRequestDto>
 
-    @POST("friends/request/send")
+    @POST("friends/requests/send")
     suspend fun sendRequest(@Body sendRequestDto: SendRequestDto)
 
     @POST("friends/requests/accept")

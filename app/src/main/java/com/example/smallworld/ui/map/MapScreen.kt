@@ -49,7 +49,7 @@ fun MapScreen(
         }
     }
     LaunchedEffect(bottomSheetState.currentVisibility) {
-        viewModel.onSheetVisbilityChanged(bottomSheetState.currentVisibility)
+        viewModel.onSheetVisibilityChanged(bottomSheetState.currentVisibility)
     }
 
     Box(
@@ -104,7 +104,9 @@ fun MapScreen(
             state.value.profile?.let {
                 ProfileComponent(
                     it,
-                    onFriendshipButtonClick = viewModel::onFriendButtonClick
+                    onSendRequestButtonClick = viewModel::sendRequest,
+                    onDeclineRequesButtonClickt = viewModel::declineRequest,
+                    onAcceptRequestButtonClick = viewModel::acceptRequest
                 )
             }
         }

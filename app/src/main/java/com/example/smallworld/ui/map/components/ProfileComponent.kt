@@ -1,4 +1,4 @@
-package com.example.smallworld.ui.map
+package com.example.smallworld.ui.map.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +30,9 @@ import com.example.smallworld.ui.theme.SmallWorldTheme
 @Composable
 fun ProfileComponent(
     profile: Profile,
-    onFriendshipButtonClick: () -> Unit,
+    onSendRequestButtonClick: () -> Unit,
+    onAcceptRequestButtonClick: () -> Unit,
+    onDeclineRequesButtonClickt: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -51,51 +56,68 @@ fun ProfileComponent(
                 text = profile.username,
                 style = MaterialTheme.typography.titleMedium,
             )
-            FriendshipButton(
+            FriendshipButtons(
                 profile.friendshipStatus,
                 modifier = Modifier.padding(top = 5.dp),
-                onClick = onFriendshipButtonClick
+                onSendRequestButtonClick = onSendRequestButtonClick,
+                onAcceptRequestButtonClick = onAcceptRequestButtonClick,
+                onDeclineRequesButtonClickt = onDeclineRequesButtonClickt
             )
         }
     }
 }
 
 @Composable
-private fun FriendshipButton(
+private fun FriendshipButtons(
     friendshipStatus: FriendshipStatus,
-    onClick: () -> Unit,
+    onSendRequestButtonClick: () -> Unit,
+    onAcceptRequestButtonClick: () -> Unit,
+    onDeclineRequesButtonClickt: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ProfileIconButton(
-        imageVector = when (friendshipStatus) {
-            FriendshipStatus.NOT_FRIENDS -> Icons.Filled.PersonAdd
-            FriendshipStatus.OUTGOING_REQUEST -> Icons.Filled.Done
-            FriendshipStatus.INCOMING_REQUEST -> Icons.Filled.Mail
-            FriendshipStatus.FRIENDS -> Icons.Filled.Group
-        },
-        text = stringResource(
-            when (friendshipStatus) {
-                FriendshipStatus.NOT_FRIENDS -> R.string.profile_add_friend_button_text
-                FriendshipStatus.OUTGOING_REQUEST -> R.string.profile_sent_request_button_text
-                FriendshipStatus.INCOMING_REQUEST -> R.string.profile_accept_request_button_text
-                FriendshipStatus.FRIENDS -> R.string.profile_confirmed_friends_button_text
-            }
-        ),
-        color = when (friendshipStatus) {
-            FriendshipStatus.NOT_FRIENDS,
-            FriendshipStatus.INCOMING_REQUEST -> MaterialTheme.colorScheme.primary
-            FriendshipStatus.OUTGOING_REQUEST,
-            FriendshipStatus.FRIENDS -> MaterialTheme.colorScheme.surfaceVariant
-        },
-        enabled = when (friendshipStatus) {
-            FriendshipStatus.NOT_FRIENDS -> true
-            FriendshipStatus.OUTGOING_REQUEST,
-            FriendshipStatus.INCOMING_REQUEST,
-            FriendshipStatus.FRIENDS -> false
-        },
-        onClick = onClick,
-        modifier = modifier
-    )
+    when (friendshipStatus) {
+        FriendshipStatus.NOT_FRIENDS -> ProfileIconButton(
+            modifier = modifier,
+            imageVector = Icons.Filled.PersonAdd,
+            text = stringResource(R.string.profile_add_friend_button_text),
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            onClick = onSendRequestButtonClick
+        )
+        FriendshipStatus.OUTGOING_REQUEST -> ProfileIconButton(
+            modifier = modifier,
+            imageVector = Icons.Filled.Done,
+            text = stringResource(R.string.profile_sent_request_button_text),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            onClick = null
+        )
+        FriendshipStatus.INCOMING_REQUEST -> Row(modifier) {
+            ProfileIconButton(
+                imageVector = Icons.Filled.Mail,
+                text = stringResource(R.string.profile_accept_request_button_text),
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                onClick = onAcceptRequestButtonClick
+            )
+            ProfileIconButton(
+                modifier = Modifier.padding(start = 8.dp),
+                imageVector = Icons.Filled.Close,
+                text = stringResource(R.string.profile_decline_request_button_text),
+                color = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                onClick = onDeclineRequesButtonClickt
+            )
+        }
+        FriendshipStatus.FRIENDS -> ProfileIconButton(
+            modifier = modifier,
+            imageVector = Icons.Filled.Group,
+            text = stringResource(R.string.profile_confirmed_friends_button_text),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            onClick = null
+        )
+    }
 }
 
 @Composable
@@ -103,8 +125,8 @@ private fun ProfileIconButton(
     imageVector: ImageVector,
     text: String,
     color: Color,
-    enabled: Boolean,
-    onClick: () -> Unit,
+    contentColor: Color,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -112,7 +134,7 @@ private fun ProfileIconButton(
             .clip(MaterialTheme.shapes.extraLarge)
             .background(color)
             .run {
-                if (enabled) clickable(onClick = onClick) else this
+                if (onClick != null) clickable(onClick = onClick) else this
             }
     ) {
         Row(
@@ -120,31 +142,50 @@ private fun ProfileIconButton(
                 start = 9.dp, top = 4.dp, end = 15.dp, bottom = 4.dp
             )
         ) {
-            val iconSizeDp = with(LocalDensity.current) { 20.sp.toDp() }
-            Icon(
-                imageVector = imageVector,
-                contentDescription = null,
-                modifier = Modifier.size(iconSizeDp)
-            )
-            Text(
-                text,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(start = 6.dp)
-            )
+            CompositionLocalProvider(LocalContentColor provides contentColor) {
+                val density = LocalDensity.current
+                val iconSizeDp = remember(density) { with(density) { 20.sp.toDp() } }
+                Icon(
+                    imageVector = imageVector,
+                    contentDescription = null,
+                    modifier = Modifier.size(iconSizeDp)
+                )
+                Text(
+                    text,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(start = 6.dp)
+                )
+            }
         }
     }
 }
 
 
-@Preview(widthDp = 300)
+@Preview(widthDp = 412)
 @Composable
 fun PreviewAddFriendButton() {
     SmallWorldTheme {
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            FriendshipButton(FriendshipStatus.NOT_FRIENDS, onClick = {})
-            FriendshipButton(FriendshipStatus.OUTGOING_REQUEST, onClick = {})
-            FriendshipButton(FriendshipStatus.INCOMING_REQUEST, onClick = {})
-            FriendshipButton(FriendshipStatus.FRIENDS, onClick = {})
+            FriendshipButtons(
+                FriendshipStatus.NOT_FRIENDS,
+                onAcceptRequestButtonClick = {},
+                onSendRequestButtonClick = {},
+                onDeclineRequesButtonClickt = {})
+            FriendshipButtons(
+                FriendshipStatus.OUTGOING_REQUEST,
+                onAcceptRequestButtonClick = {},
+                onSendRequestButtonClick = {},
+                onDeclineRequesButtonClickt = {})
+            FriendshipButtons(
+                FriendshipStatus.INCOMING_REQUEST,
+                onAcceptRequestButtonClick = {},
+                onSendRequestButtonClick = {},
+                onDeclineRequesButtonClickt = {})
+            FriendshipButtons(
+                FriendshipStatus.FRIENDS,
+                onAcceptRequestButtonClick = {},
+                onSendRequestButtonClick = {},
+                onDeclineRequesButtonClickt = {})
         }
     }
 }
@@ -154,5 +195,7 @@ fun PreviewAddFriendButton() {
 fun ProfilePreview() {
     ProfileComponent(
         Profile("", "jared", FriendshipStatus.NOT_FRIENDS),
-        onFriendshipButtonClick = {})
+        onAcceptRequestButtonClick = {},
+        onSendRequestButtonClick = {},
+        onDeclineRequesButtonClickt = {})
 }

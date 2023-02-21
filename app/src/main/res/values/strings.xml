@@ -34,9 +34,10 @@
     <string name="profile_sent_request_button_text">Sent</string>
     <string name="profile_accept_request_button_text">Accept</string>
     <string name="profile_confirmed_friends_button_text">Friends</string>
+    <string name="profile_decline_request_button_text">Decline</string>
 
     <string name="notifications_accept_request_button_text">Accept</string>
     <string name="notifications_decline_request_button_text">Decline</string>
     <string name="notifications_error_state_text">Could not get friend requests</string>
-    <string name="notifications_sent_you_a_friend_request">\" sent you a friend request\"</string>
+    <string name="notifications_sent_you_a_friend_request"> sent you a friend request</string>
 </resources>

@@ -116,9 +116,9 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun onFriendButtonClick() {
+    fun sendRequest() {
+        val userId = profile.value?.userId ?: return
         viewModelScope.launch {
-            val userId = profile.value?.userId ?: return@launch
             try {
                 friendsRepository.sendRequest(userId)
                 profile.value =
@@ -135,7 +135,47 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun onSheetVisbilityChanged(visibility: BottomSheetVisibility) {
+    fun acceptRequest() {
+        val userId = profile.value?.userId ?: return
+        viewModelScope.launch {
+            try {
+                friendsRepository.acceptRequest(userId)
+            } catch (e: Throwable) {
+                if (networkService.isOnlineStateFlow.value) {
+                    Timber.e(e)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+                } else {
+                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
+                }
+                return@launch
+            }
+            profile.value?.let {
+                profile.value = it.copy(friendshipStatus = FriendshipStatus.FRIENDS)
+            }
+        }
+    }
+
+    fun declineRequest() {
+        val userId = profile.value?.userId ?: return
+        viewModelScope.launch {
+            try {
+                friendsRepository.declineRequest(userId)
+            } catch (e: Throwable) {
+                if (networkService.isOnlineStateFlow.value) {
+                    Timber.e(e)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+                } else {
+                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
+                }
+                return@launch
+            }
+            profile.value?.let {
+                profile.value = it.copy(friendshipStatus = FriendshipStatus.NOT_FRIENDS)
+            }
+        }
+    }
+
+    fun onSheetVisibilityChanged(visibility: BottomSheetVisibility) {
         bottomSheetVisibility.value = visibility
     }
 }
