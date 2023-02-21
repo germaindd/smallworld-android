@@ -9,18 +9,26 @@ import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-sealed class NotificationsScreenState {
-    object Loading : NotificationsScreenState()
-    object Empty : NotificationsScreenState()
+data class NotificationsScreenState(
+    val refreshing: Boolean = false,
+    val notificationsResult: NotificationsResult = NotificationsResult.Loading
+)
+
+sealed class NotificationsResult {
+    object Loading : NotificationsResult()
+    object Empty : NotificationsResult()
     data class Loaded(
         val friendRequests: List<FriendRequest>
-    ) : NotificationsScreenState()
+    ) : NotificationsResult()
 
-    object Error : NotificationsScreenState()
+    object Error : NotificationsResult()
 }
 
 @HiltViewModel
@@ -29,19 +37,28 @@ class NotificationsViewModel @Inject constructor(
     private val networkService: NetworkService,
     private val snackBarMessageBus: SnackBarMessageBus
 ) : ViewModel() {
-    private var prevState: NotificationsScreenState = NotificationsScreenState.Loading
+    private val refreshing = MutableStateFlow(false)
 
-    val state: MutableStateFlow<NotificationsScreenState> =
-        MutableStateFlow(NotificationsScreenState.Loading)
+    private val notificationsResult: MutableStateFlow<NotificationsResult> =
+        MutableStateFlow(NotificationsResult.Loading)
+
+    val state =
+        combine(refreshing, notificationsResult) { refreshing, notificationsResult ->
+            NotificationsScreenState(refreshing, notificationsResult)
+        }.stateIn(
+            viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = NotificationsScreenState(false, NotificationsResult.Loading),
+        )
 
     init {
-        refreshRequests()
+        viewModelScope.launch {
+            fetchRequests()
+        }
     }
 
 
-    fun refreshRequests() {
-        prevState = state.value
-        state.value = NotificationsScreenState.Loading
+    private suspend fun fetchRequests() {
         viewModelScope.launch {
             val requests = try {
                 friendsRepository.getRequests()
@@ -52,14 +69,21 @@ class NotificationsViewModel @Inject constructor(
                 } else {
                     snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
                 }
-                state.value = when (prevState) {
-                    is NotificationsScreenState.Loaded, NotificationsScreenState.Empty -> prevState
-                    NotificationsScreenState.Error, NotificationsScreenState.Loading -> NotificationsScreenState.Error
-                }
+                // if the user
+                if (notificationsResult.value is NotificationsResult.Loading)
+                    notificationsResult.value = NotificationsResult.Error
                 return@launch
             }
-            state.value = if (requests.isEmpty()) NotificationsScreenState.Empty
-            else NotificationsScreenState.Loaded(requests)
+            notificationsResult.value = if (requests.isEmpty()) NotificationsResult.Empty
+            else NotificationsResult.Loaded(requests)
+        }
+    }
+
+    fun refreshRequests() {
+        refreshing.value = true
+        viewModelScope.launch {
+            fetchRequests()
+            refreshing.value = false
         }
     }
 
@@ -76,14 +100,14 @@ class NotificationsViewModel @Inject constructor(
                 }
                 return@launch
             }
-            (state.value as? NotificationsScreenState.Loaded)?.let { loadedState ->
+            (notificationsResult.value as? NotificationsResult.Loaded)?.let { loadedState ->
                 val remainingRequests =
                     loadedState.friendRequests.filter { it.userId != acceptingRequest.userId }
-                state.value =
-                    if (remainingRequests.isNotEmpty()) NotificationsScreenState.Loaded(
+                notificationsResult.value =
+                    if (remainingRequests.isNotEmpty()) NotificationsResult.Loaded(
                         remainingRequests
                     )
-                    else NotificationsScreenState.Empty
+                    else NotificationsResult.Empty
             }
         }
     }
@@ -101,13 +125,13 @@ class NotificationsViewModel @Inject constructor(
                 }
                 return@launch
             }
-            (state.value as? NotificationsScreenState.Loaded)?.let { loadedState ->
+            (notificationsResult.value as? NotificationsResult.Loaded)?.let { loadedState ->
                 val remainingRequests =
                     loadedState.friendRequests.filter { it.userId != decliningRequest.userId }
-                state.value =
-                    if (remainingRequests.isNotEmpty()) NotificationsScreenState.Loaded(
+                notificationsResult.value =
+                    if (remainingRequests.isNotEmpty()) NotificationsResult.Loaded(
                         remainingRequests
-                    ) else NotificationsScreenState.Empty
+                    ) else NotificationsResult.Empty
             }
         }
     }

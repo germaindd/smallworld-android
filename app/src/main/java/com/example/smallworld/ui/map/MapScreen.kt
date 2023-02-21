@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
-
 package com.example.smallworld.ui.map
 
 import androidx.compose.foundation.layout.*
@@ -23,6 +21,7 @@ import kotlinx.coroutines.flow.collectLatest
 private val searchBarHeight = 56.dp
 private val searchBarPadding = 16.dp
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel, modifier: Modifier = Modifier

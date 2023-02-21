@@ -3,8 +3,14 @@ package com.example.smallworld.ui.notifications
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,46 +26,74 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.R
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NotificationsScreen(
     viewModel: NotificationsViewModel
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
-    Surface(modifier = Modifier.fillMaxSize()) {
-        when (state) {
-            NotificationsScreenState.Loading -> NotificationsLoadingState()
-            NotificationsScreenState.Empty -> NotificationsEmptyState()
-            NotificationsScreenState.Error -> NotificationsErrorState()
-            is NotificationsScreenState.Loaded -> LazyColumn {
-                items(state.friendRequests) { request ->
-                    FriendRequestTile(
-                        username = request.username,
-                        onAcceptClick = { viewModel.acceptRequest(request) },
-                        onDeclineClick = { viewModel.declineRequest(request) }
+
+    val refreshState = rememberPullRefreshState(state.refreshing, viewModel::refreshRequests)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(
+                refreshState,
+                enabled = state.notificationsResult !is NotificationsResult.Loading
+            )
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            when (state.notificationsResult) {
+                NotificationsResult.Loading -> NotificationsLoadingState()
+                NotificationsResult.Empty -> NotificationsEmptyState(
+                    modifier = Modifier.verticalScroll(
+                        rememberScrollState()
                     )
-                    Divider()
+                )
+                NotificationsResult.Error -> NotificationsErrorState(
+                    modifier = Modifier.verticalScroll(
+                        rememberScrollState()
+                    )
+                )
+                is NotificationsResult.Loaded -> LazyColumn {
+                    items(state.notificationsResult.friendRequests) { request ->
+                        FriendRequestTile(
+                            username = request.username,
+                            onAcceptClick = { viewModel.acceptRequest(request) },
+                            onDeclineClick = { viewModel.declineRequest(request) }
+                        )
+                        Divider()
+                    }
                 }
             }
+            PullRefreshIndicator(
+                state.refreshing,
+                refreshState,
+                Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 }
 
 @Composable
-private fun NotificationsLoadingState() {
+private fun NotificationsLoadingState(modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         CircularProgressIndicator()
     }
 }
 
 @Composable
-private fun NotificationsEmptyState() {
+private fun NotificationsEmptyState(modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         Icon(
             Icons.Filled.PersonAdd,
@@ -77,11 +111,11 @@ private fun NotificationsEmptyState() {
 }
 
 @Composable
-private fun NotificationsErrorState() {
+private fun NotificationsErrorState(modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         Icon(
             Icons.Filled.Error,
