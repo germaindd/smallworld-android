@@ -4,11 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -26,20 +25,76 @@ fun NotificationsScreen(
     viewModel: NotificationsViewModel
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
-    when (state) {
-        NotificationsScreenState.Loading -> {}
-        NotificationsScreenState.Empty -> {}
-        NotificationsScreenState.Error -> {}
-        is NotificationsScreenState.Loaded -> LazyColumn {
-            items(state.friendRequests) { request ->
-                FriendRequestTile(
-                    username = request.username,
-                    onAcceptClick = { viewModel.acceptRequest(request) },
-                    onDeclineClick = { }
-                )
-                Divider()
+    Surface(modifier = Modifier.fillMaxSize()) {
+        when (state) {
+            NotificationsScreenState.Loading -> NotificationsLoadingState()
+            NotificationsScreenState.Empty -> NotificationsEmptyState()
+            NotificationsScreenState.Error -> NotificationsErrorState()
+            is NotificationsScreenState.Loaded -> LazyColumn {
+                items(state.friendRequests) { request ->
+                    FriendRequestTile(
+                        username = request.username,
+                        onAcceptClick = { viewModel.acceptRequest(request) },
+                        onDeclineClick = { viewModel.declineRequest(request) }
+                    )
+                    Divider()
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun NotificationsLoadingState() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun NotificationsEmptyState() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Icon(
+            Icons.Filled.PersonAdd,
+            contentDescription = null,
+            Modifier.size(128.dp),
+            MaterialTheme.colorScheme.surfaceTint
+        )
+        Text(
+            "No pending requests.",
+            modifier = Modifier.padding(top = 16.dp),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun NotificationsErrorState() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Icon(
+            Icons.Filled.Error,
+            contentDescription = null,
+            Modifier.size(128.dp),
+            MaterialTheme.colorScheme.surfaceTint
+        )
+        Text(
+            stringResource(R.string.notifications_error_state_text),
+            modifier = Modifier.padding(top = 16.dp),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -60,7 +115,7 @@ fun FriendRequestTile(username: String, onAcceptClick: () -> Unit, onDeclineClic
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                         append(username)
                     }
-                    append(" sent you a friend request")
+                    append(stringResource(R.string.notifications_sent_you_a_friend_request))
                 },
                 style = MaterialTheme.typography.titleMedium
             )
@@ -99,10 +154,34 @@ fun FriendRequestTile(username: String, onAcceptClick: () -> Unit, onDeclineClic
     }
 }
 
-@Preview(widthDp = 412, backgroundColor = 0xffffff)
+@Preview(widthDp = 412, backgroundColor = 0xFFFBFDF8)
 @Composable
 fun FriendRequestTilePreview() {
     SmallWorldTheme {
         FriendRequestTile("username", { }) { }
+    }
+}
+
+@Preview(widthDp = 412, backgroundColor = 0xFFFBFDF8)
+@Composable
+fun NotificationsEmptyPreview() {
+    SmallWorldTheme {
+        NotificationsEmptyState()
+    }
+}
+
+@Preview(widthDp = 412, backgroundColor = 0xFFFBFDF8)
+@Composable
+fun NotificationsLoadingPreview() {
+    SmallWorldTheme {
+        NotificationsLoadingState()
+    }
+}
+
+@Preview(widthDp = 412, backgroundColor = 0xffffff)
+@Composable
+fun NotificationsErrorPreview() {
+    SmallWorldTheme {
+        NotificationsErrorState()
     }
 }

@@ -2,6 +2,7 @@ package com.example.smallworld.data.friends
 
 import com.example.smallworld.data.SmallWorldApi
 import com.example.smallworld.data.friends.dto.AcceptRequestDto
+import com.example.smallworld.data.friends.dto.DeclineRequestDto
 import com.example.smallworld.data.friends.dto.SendRequestDto
 import com.example.smallworld.data.friends.dto.toFriendRequest
 import com.example.smallworld.di.DispatcherIO
@@ -23,5 +24,9 @@ class FriendsRepository @Inject constructor(
 
     suspend fun getRequests() = withContext(dispatcher) {
         api.getRequests().map { it.toFriendRequest() }
+    }
+
+    suspend fun declineRequest(userId: String) = withContext(dispatcher) {
+        api.declineRequest(DeclineRequestDto(userId))
     }
 }

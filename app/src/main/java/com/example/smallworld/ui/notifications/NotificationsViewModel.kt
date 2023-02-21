@@ -53,14 +53,13 @@ class NotificationsViewModel @Inject constructor(
                     snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
                 }
                 state.value = when (prevState) {
-                    is NotificationsScreenState.Loaded,
-                    NotificationsScreenState.Empty -> prevState
-                    NotificationsScreenState.Error,
-                    NotificationsScreenState.Loading -> NotificationsScreenState.Error
+                    is NotificationsScreenState.Loaded, NotificationsScreenState.Empty -> prevState
+                    NotificationsScreenState.Error, NotificationsScreenState.Loading -> NotificationsScreenState.Error
                 }
                 return@launch
             }
-            state.value = NotificationsScreenState.Loaded(requests)
+            state.value = if (requests.isEmpty()) NotificationsScreenState.Empty
+            else NotificationsScreenState.Loaded(requests)
         }
     }
 
@@ -77,11 +76,39 @@ class NotificationsViewModel @Inject constructor(
                 }
                 return@launch
             }
-            (state.value as? NotificationsScreenState.Loaded)
-                ?.let { loadedState ->
-                    state.value =
-                        NotificationsScreenState.Loaded(loadedState.friendRequests.filter { it.userId != acceptingRequest.userId })
+            (state.value as? NotificationsScreenState.Loaded)?.let { loadedState ->
+                val remainingRequests =
+                    loadedState.friendRequests.filter { it.userId != acceptingRequest.userId }
+                state.value =
+                    if (remainingRequests.isNotEmpty()) NotificationsScreenState.Loaded(
+                        remainingRequests
+                    )
+                    else NotificationsScreenState.Empty
+            }
+        }
+    }
+
+    fun declineRequest(decliningRequest: FriendRequest) {
+        viewModelScope.launch {
+            try {
+                friendsRepository.declineRequest(decliningRequest.userId)
+            } catch (e: Throwable) {
+                if (networkService.isOnlineStateFlow.value) {
+                    Timber.e(e)
+                    snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+                } else {
+                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
                 }
+                return@launch
+            }
+            (state.value as? NotificationsScreenState.Loaded)?.let { loadedState ->
+                val remainingRequests =
+                    loadedState.friendRequests.filter { it.userId != decliningRequest.userId }
+                state.value =
+                    if (remainingRequests.isNotEmpty()) NotificationsScreenState.Loaded(
+                        remainingRequests
+                    ) else NotificationsScreenState.Empty
+            }
         }
     }
 }
