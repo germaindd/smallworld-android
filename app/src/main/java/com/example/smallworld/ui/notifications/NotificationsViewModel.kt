@@ -8,17 +8,15 @@ import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 data class NotificationsScreenState(
     val refreshing: Boolean = false,
-    val notificationsResult: NotificationsResult = NotificationsResult.Loading
+    val notificationsResult: NotificationsResult = NotificationsResult.Loading,
+    val numberOfNotifications: Int? = null
 )
 
 sealed class NotificationsResult {
@@ -37,18 +35,31 @@ class NotificationsViewModel @Inject constructor(
     private val networkService: NetworkService,
     private val snackBarMessageBus: SnackBarMessageBus
 ) : ViewModel() {
+    var firstVisibleItemOffset: Int = 0
+    var firstVisibleItemIndex: Int = 0
     private val refreshing = MutableStateFlow(false)
 
     private val notificationsResult: MutableStateFlow<NotificationsResult> =
         MutableStateFlow(NotificationsResult.Loading)
 
+    private val numberOfNotifications = notificationsResult
+        .map { if (it is NotificationsResult.Loaded && it.friendRequests.isNotEmpty()) it.friendRequests.size + 1 else null }
+
     val state =
-        combine(refreshing, notificationsResult) { refreshing, notificationsResult ->
-            NotificationsScreenState(refreshing, notificationsResult)
+        combine(
+            refreshing,
+            notificationsResult,
+            numberOfNotifications
+        ) { refreshing, notificationsResult, numberOfNotifications ->
+            NotificationsScreenState(refreshing, notificationsResult, numberOfNotifications)
         }.stateIn(
             viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = NotificationsScreenState(false, NotificationsResult.Loading),
+            SharingStarted.Eagerly,
+            NotificationsScreenState(
+                refreshing = false,
+                notificationsResult = NotificationsResult.Loading,
+                numberOfNotifications = null
+            ),
         )
 
     init {

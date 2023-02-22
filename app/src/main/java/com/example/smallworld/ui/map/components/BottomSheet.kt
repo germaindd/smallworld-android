@@ -4,6 +4,7 @@ package com.example.smallworld.ui.map.components
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
@@ -19,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -59,6 +61,7 @@ fun rememberBottomSheetState(initialValue: BottomSheetVisibility): BottomSheetSt
 
 private val extraSpaceForBounce = 100.dp
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheet(
     bottomSheetState: BottomSheetState,
@@ -91,6 +94,7 @@ fun BottomSheet(
         shape = MaterialTheme.shapes.extraLarge.copy(
             bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)
         ),
+        shadowElevation = 5.dp
     ) {
         Column(Modifier
             .fillMaxWidth()
@@ -124,9 +128,16 @@ fun PreviewDragHandle() {
 @Preview
 @Composable
 fun PreviewBottomSheet() {
-    BottomSheet(
-        bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetVisibility.SHOWING)
+    Box(
+        modifier = Modifier
+            .background(Color.Blue)
+            .width(420.dp)
+            .height(500.dp)
     ) {
-        Box(Modifier.height(300.dp))
+        BottomSheet(
+            bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetVisibility.SHOWING)
+        ) {
+            Box(Modifier.height(300.dp))
+        }
     }
 }

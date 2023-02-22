@@ -3,6 +3,7 @@ package com.example.smallworld.ui.notifications
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
@@ -13,6 +14,7 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,6 +36,19 @@ fun NotificationsScreen(
     val state = viewModel.state.collectAsStateWithLifecycle().value
 
     val refreshState = rememberPullRefreshState(state.refreshing, viewModel::refreshRequests)
+    val listState = rememberLazyListState(
+        viewModel.firstVisibleItemIndex,
+        viewModel.firstVisibleItemOffset
+    )
+
+    // update the list state in the viewmodel once the user changes tabs
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.firstVisibleItemIndex = listState.firstVisibleItemIndex
+            viewModel.firstVisibleItemOffset = listState.firstVisibleItemScrollOffset
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -58,14 +73,16 @@ fun NotificationsScreen(
                         rememberScrollState()
                     )
                 )
-                is NotificationsResult.Loaded -> LazyColumn {
-                    items(state.notificationsResult.friendRequests) { request ->
-                        FriendRequestTile(
-                            username = request.username,
-                            onAcceptClick = { viewModel.acceptRequest(request) },
-                            onDeclineClick = { viewModel.declineRequest(request) }
-                        )
-                        Divider()
+                is NotificationsResult.Loaded -> {
+                    LazyColumn(state = listState) {
+                        items(state.notificationsResult.friendRequests) { request ->
+                            FriendRequestTile(
+                                username = request.username,
+                                onAcceptClick = { viewModel.acceptRequest(request) },
+                                onDeclineClick = { viewModel.declineRequest(request) }
+                            )
+                            Divider()
+                        }
                     }
                 }
             }
