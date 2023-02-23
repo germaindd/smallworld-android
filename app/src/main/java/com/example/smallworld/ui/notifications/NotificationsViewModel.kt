@@ -70,24 +70,22 @@ class NotificationsViewModel @Inject constructor(
 
 
     private suspend fun fetchRequests() {
-        viewModelScope.launch {
-            val requests = try {
-                friendsRepository.getRequests()
-            } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
-                    Timber.e(e)
-                    snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
-                } else {
-                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
-                }
-                // if the user
-                if (notificationsResult.value is NotificationsResult.Loading)
-                    notificationsResult.value = NotificationsResult.Error
-                return@launch
+        val requests = try {
+            friendsRepository.getRequests()
+        } catch (e: Throwable) {
+            if (networkService.isOnlineStateFlow.value) {
+                Timber.e(e)
+                snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+            } else {
+                snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
             }
-            notificationsResult.value = if (requests.isEmpty()) NotificationsResult.Empty
-            else NotificationsResult.Loaded(requests)
+            // if the user
+            if (notificationsResult.value is NotificationsResult.Loading)
+                notificationsResult.value = NotificationsResult.Error
+            return
         }
+        notificationsResult.value = if (requests.isEmpty()) NotificationsResult.Empty
+        else NotificationsResult.Loaded(requests)
     }
 
     fun refreshRequests() {
