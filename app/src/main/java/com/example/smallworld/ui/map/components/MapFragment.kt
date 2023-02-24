@@ -1,20 +1,25 @@
 package com.example.smallworld.ui.map.components
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
+import androidx.annotation.RequiresPermission
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.smallworld.R
+import com.example.smallworld.ui.map.LocationManager
 import com.example.smallworld.ui.map.PermissionsManager
-import com.mapbox.maps.MapInitOptions
-import com.mapbox.maps.MapView
-import com.mapbox.maps.Style
+import com.mapbox.geojson.Point
+import com.mapbox.maps.*
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.plugin.LocationPuck2D
+import com.mapbox.maps.plugin.animation.MapAnimationOptions
+import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.compass.compass
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
@@ -39,11 +44,15 @@ class MapFragment : Fragment() {
     @Inject
     lateinit var permissionsManager: PermissionsManager
 
+    @Inject
+    lateinit var locationManager: LocationManager
+
     private var upstreamOnMapClickListener: (() -> Unit)? = null
 
     private var compassMarginTop: Float? = null
     private var compassMarginRight: Float? = null
 
+    @SuppressLint("MissingPermission")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,6 +61,7 @@ class MapFragment : Fragment() {
             requireContext(),
             MapInitOptions(requireContext(), styleUri = Style.MAPBOX_STREETS)
         ).apply {
+            visibility = View.INVISIBLE
             logo.enabled = false
             attribution.enabled = false
             scalebar.enabled = false
@@ -75,6 +85,7 @@ class MapFragment : Fragment() {
         return mapView
     }
 
+    @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"])
     private fun showLocation() {
         mapView.location.let {
             it.enabled = true
@@ -92,6 +103,26 @@ class MapFragment : Fragment() {
                         literal(1.0)
                     }
                 }.toJson()
+            )
+        }
+        lifecycleScope.launch {
+            val location = locationManager.getCurrentLocation() ?: return@launch
+            val baseCameraOptions = CameraOptions.Builder().bearing(0.0).pitch(0.0)
+                .center(Point.fromLngLat(location.longitude, location.latitude))
+
+            // set initial map location
+            mapView.getMapboxMap().setCamera(
+                baseCameraOptions.zoom(5.0).build()
+            )
+
+            // animate to zoomed location
+            mapView.visibility = View.VISIBLE
+            mapView.camera.flyTo(
+                baseCameraOptions.zoom(5.5).build(),
+                MapAnimationOptions.mapAnimationOptions {
+                    duration(2000)
+                    interpolator(DecelerateInterpolator(2f))
+                }
             )
         }
     }
