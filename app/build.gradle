@@ -102,6 +102,9 @@ dependencies {
     // Maps with Mapbox
     implementation 'com.mapbox.maps:android:10.11.0'
 
+    // Location with Google Play Services Fused Location Provider
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+
     implementation 'androidx.activity:activity-compose:1.6.1'
     implementation "androidx.fragment:fragment-ktx:1.5.5"
 
