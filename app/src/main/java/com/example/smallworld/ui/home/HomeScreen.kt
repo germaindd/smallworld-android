@@ -14,6 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.example.smallworld.R
 import com.example.smallworld.ui.map.MapScreen
 import com.example.smallworld.ui.map.MapViewModel
@@ -51,6 +52,8 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         when (selectedScreen.value) {
             SelectedScreen.MAP -> MapScreen(
                 mapViewModel,
+                viewModelStoreOwner = LocalViewModelStoreOwner.current
+                    ?: error("LocalViewModelStoreOwner not defined."),
                 Modifier
                     .padding(paddingValues)
                     .consumeWindowInsets(paddingValues)

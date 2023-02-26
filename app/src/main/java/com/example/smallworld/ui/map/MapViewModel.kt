@@ -83,6 +83,9 @@ class MapViewModel @Inject constructor(
     private val _moveBottomSheet = MutableSharedFlow<BottomSheetVisibility>()
     val moveBottomSheet: SharedFlow<BottomSheetVisibility> = _moveBottomSheet
 
+    private val _goToCurrentLocation = MutableSharedFlow<Unit>()
+    val goToCurrentLocation: SharedFlow<Unit> = _goToCurrentLocation
+
     val state: StateFlow<MapScreenState> = combine(
         query,
         searchResults,
@@ -113,6 +116,12 @@ class MapViewModel @Inject constructor(
 
             _moveBottomSheet.emit(BottomSheetVisibility.SHOWING)
             profile.value = profileResponse
+        }
+    }
+
+    fun onGoToCurrentLocation() {
+        viewModelScope.launch {
+            _goToCurrentLocation.emit(Unit)
         }
     }
 
