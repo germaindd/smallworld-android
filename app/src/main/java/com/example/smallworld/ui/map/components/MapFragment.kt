@@ -71,6 +71,7 @@ class MapFragment : Fragment() {
                     CameraOptions.Builder()
                         .center(locationPoint)
                         .zoom(4.0)
+                        .bearing(0.0)
                         .build(),
                     MapAnimationOptions.mapAnimationOptions {
                         duration(1000)
