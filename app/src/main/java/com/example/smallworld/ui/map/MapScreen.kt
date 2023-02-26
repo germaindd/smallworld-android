@@ -8,19 +8,17 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidViewBinding
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.example.smallworld.R
 import com.example.smallworld.databinding.LayoutFragmentContainerBinding
 import com.example.smallworld.ui.map.components.*
@@ -34,7 +32,7 @@ private val currentLocationButtonPadding = 16.dp
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel, viewModelStoreOwner: ViewModelStoreOwner, modifier: Modifier = Modifier
+    viewModel: MapViewModel, modifier: Modifier = Modifier
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
 
@@ -65,21 +63,14 @@ fun MapScreen(
     Box(
         modifier.fillMaxSize()
     ) {
-        AndroidViewBinding(
-            LayoutFragmentContainerBinding::inflate, modifier = Modifier.fillMaxSize()
-        ) {
-            fragmentContainerView.getFragment<MapFragment>().apply {
-                setOnMapClickListener {
-                    focusManager.clearFocus()
-                    searchBarActive.value = false
-                }
-                setCompassMargins(
-                    top = searchBarHeight + searchBarPadding * 2 + currentLocationButtonHeight + currentLocationButtonPadding,
-                    right = searchBarPadding
-                )
-                setViewModelStoreOwner(viewModelStoreOwner)
-            }
-        }
+        MapComponent(
+            onClick = {
+                focusManager.clearFocus()
+                searchBarActive.value = false
+            },
+            compassMarginTop = searchBarHeight + searchBarPadding * 2 + currentLocationButtonHeight + currentLocationButtonPadding,
+            compassMarginRight = searchBarPadding
+        )
         Column {
             MapSearchBar(
                 query = state.value.query,
@@ -133,6 +124,28 @@ fun MapScreen(
                     onAcceptRequestButtonClick = viewModel::acceptRequest
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MapComponent(
+    onClick: () -> Unit,
+    compassMarginTop: Dp,
+    compassMarginRight: Dp
+) {
+    val viewModelStoreOwner = LocalViewModelStoreOwner.current
+    AndroidViewBinding(
+        LayoutFragmentContainerBinding::inflate, modifier = Modifier.fillMaxSize()
+    ) {
+        fragmentContainerView.getFragment<MapFragment>().apply {
+            setOnMapClickListener(onClick)
+            setCompassMargins(
+                top = compassMarginTop, right = compassMarginRight
+            )
+            setViewModelStoreOwner(
+                viewModelStoreOwner ?: error("LocalViewModelStoreOwner not defined.")
+            )
         }
     }
 }
