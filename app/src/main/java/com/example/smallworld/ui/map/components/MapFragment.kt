@@ -7,21 +7,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.RequiresPermission
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
-import com.example.smallworld.R
 import com.example.smallworld.ui.map.LocationManager
+import com.example.smallworld.ui.map.MapScreenState
 import com.example.smallworld.ui.map.MapViewModel
 import com.example.smallworld.ui.map.PermissionsManager
+import com.example.smallworld.ui.map.getLocationPuck
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
-import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
-import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.attribution.attribution
@@ -34,6 +32,17 @@ import com.mapbox.maps.plugin.scalebar.scalebar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val DEFAULT_ZOOM = 4.0
+private const val DEFAULT_BEARING = 0.0
+private const val DEFAULT_PITCH = 0.0
+
+private const val GO_TO_LOCATION_ANIMATION_DURATION = 1000L
+private const val GO_TO_LOCATION_ANIMATION_DECELERATION_FACTOR = 2f
+
+private const val FLY_INTO_ANIMATION_STARTING_ZOOM = 3.0
+private const val FLY_INTO_ANIMATION_DURATION_MILLISECONDS = 2000L
+private const val FLY_INTO_ANIMATION_DECELERATION_FACTOR = 2f
 
 @AndroidEntryPoint
 class MapFragment : Fragment() {
@@ -58,27 +67,11 @@ class MapFragment : Fragment() {
     private var compassMarginTop: Float? = null
     private var compassMarginRight: Float? = null
 
-    @SuppressLint("MissingPermission")
-    fun setViewModelStoreOwner(viewModelStoreOwner: ViewModelStoreOwner) {
-        _viewModel = ViewModelProvider(viewModelStoreOwner)[MapViewModel::class.java]
-        lifecycleScope.launch {
-            viewModel.goToCurrentLocation.collect {
-                val locationPoint = locationManager.getCurrentLocation()?.let { location ->
-                    Point.fromLngLat(location.longitude, location.latitude)
-                } ?: return@collect
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-                mapView.camera.easeTo(
-                    CameraOptions.Builder()
-                        .center(locationPoint)
-                        .zoom(4.0)
-                        .bearing(0.0)
-                        .build(),
-                    MapAnimationOptions.mapAnimationOptions {
-                        duration(1000)
-                        interpolator(DecelerateInterpolator(2f))
-                    })
-            }
-        }
+        // initialise PermissionsManager
+        permissionsManager.init(this)
     }
 
     @SuppressLint("MissingPermission")
@@ -86,9 +79,12 @@ class MapFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _mapView = MapView(
-            requireContext(), MapInitOptions(requireContext(), styleUri = Style.MAPBOX_STREETS)
+            requireContext(),
+            MapInitOptions(
+                requireContext(),
+                styleUri = Style.MAPBOX_STREETS
+            )
         ).apply {
-            visibility = View.INVISIBLE
             logo.enabled = false
             attribution.enabled = false
             scalebar.enabled = false
@@ -99,65 +95,107 @@ class MapFragment : Fragment() {
             }
         }
 
-        if (permissionsManager.hasLocationPermissions) {
-            showLocation()
-        } else {
-            lifecycleScope.launch {
-                val havePermissions =
-                    permissionsManager.requestLocationPermissions(this@MapFragment)
-                if (havePermissions) showLocation()
-            }
-        }
         return mapView
-    }
-
-    @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"])
-    private fun showLocation() {
-        mapView.location.let {
-            it.enabled = true
-            it.locationPuck = LocationPuck2D(
-                bearingImage = AppCompatResources.getDrawable(
-                    requireContext(), R.drawable.map_screen_location_puck
-                ), scaleExpression = interpolate {
-                    linear()
-                    zoom()
-                    stop {
-                        literal(0.0)
-                        literal(0.6)
-                    }
-                    stop {
-                        literal(20.0)
-                        literal(1.0)
-                    }
-                }.toJson()
-            )
-        }
-        lifecycleScope.launch {
-            val locationPoint = locationManager.getCurrentLocation()?.let { location ->
-                Point.fromLngLat(location.longitude, location.latitude)
-            } ?: return@launch
-            val baseCameraOptions = CameraOptions.Builder().bearing(0.0).pitch(0.0)
-                .center(locationPoint)
-
-            // set initial map location
-            mapView.getMapboxMap().setCamera(
-                baseCameraOptions.zoom(3.0).build()
-            )
-
-            // animate to zoomed location
-            mapView.visibility = View.VISIBLE
-            mapView.camera.flyTo(baseCameraOptions.zoom(4.0).build(),
-                MapAnimationOptions.mapAnimationOptions {
-                    duration(2000)
-                    interpolator(DecelerateInterpolator(2f))
-                })
-        }
     }
 
     override fun onDestroy() {
         mapView.getMapboxMap().removeOnMapClickListener(onMapClickListener)
         upstreamOnMapClickListener = null
+        val cameraState = mapView.getMapboxMap().cameraState
+        viewModel.saveCameraPosition(
+            latitude = cameraState.center.latitude(),
+            longitude = cameraState.center.longitude(),
+            zoom = cameraState.zoom,
+            bearing = cameraState.bearing
+        )
         super.onDestroy()
+    }
+
+    @SuppressLint("MissingPermission")
+    fun setViewModelStoreOwner(viewModelStoreOwner: ViewModelStoreOwner) {
+        _viewModel = ViewModelProvider(viewModelStoreOwner)[MapViewModel::class.java]
+        lifecycleScope.launch {
+            viewModel.goToCurrentLocation.collect { goToCurrentLocation() }
+        }
+        lifecycleScope.launch {
+            for (event in viewModel.onRequestLocationPermissions) {
+                val havePermissions =
+                    permissionsManager.requestLocationPermissions()
+                viewModel.onLocationPermissionsResult(havePermissions)
+            }
+        }
+        lifecycleScope.launch {
+            for (event in viewModel.flyIntoCurrentLocation) {
+                flyIntoCurrentLocation()
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.state.collect { mapScreenState: MapScreenState ->
+                val cameraState = mapScreenState.cameraState ?: return@collect
+                mapView.getMapboxMap().setCamera(
+                    CameraOptions.Builder()
+                        .center(Point.fromLngLat(cameraState.longitude, cameraState.latitude))
+                        .zoom(cameraState.zoom)
+                        .bearing(cameraState.bearing)
+                        .build()
+                )
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.isLocationEnabled.collect {
+                mapView.location.let {
+                    it.enabled = true
+                    it.locationPuck = getLocationPuck(requireContext())
+                }
+            }
+        }
+    }
+
+    @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"])
+    private suspend fun goToCurrentLocation() {
+        val locationPoint = locationManager.getCurrentLocation()?.let { location ->
+            Point.fromLngLat(location.longitude, location.latitude)
+        } ?: return
+
+        mapView.camera.easeTo(
+            CameraOptions.Builder()
+                .center(locationPoint)
+                .zoom(DEFAULT_ZOOM)
+                .bearing(DEFAULT_BEARING)
+                .build(),
+            MapAnimationOptions.mapAnimationOptions {
+                duration(GO_TO_LOCATION_ANIMATION_DURATION)
+                interpolator(
+                    DecelerateInterpolator(
+                        GO_TO_LOCATION_ANIMATION_DECELERATION_FACTOR
+                    )
+                )
+            })
+    }
+
+    @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION"])
+    private fun flyIntoCurrentLocation() {
+        lifecycleScope.launch {
+            val locationPoint = locationManager.getCurrentLocation()?.let { location ->
+                Point.fromLngLat(location.longitude, location.latitude)
+            } ?: return@launch
+            val baseCameraOptions =
+                CameraOptions.Builder().bearing(DEFAULT_BEARING).pitch(DEFAULT_PITCH)
+                    .center(locationPoint)
+
+            // start off zoomed out
+            mapView.getMapboxMap().setCamera(
+                baseCameraOptions.zoom(FLY_INTO_ANIMATION_STARTING_ZOOM).build()
+            )
+
+            // zoom closer into the map using an animation, achieving the "fly into" current
+            // location effect)
+            mapView.camera.flyTo(baseCameraOptions.zoom(DEFAULT_ZOOM).build(),
+                MapAnimationOptions.mapAnimationOptions {
+                    duration(FLY_INTO_ANIMATION_DURATION_MILLISECONDS)
+                    interpolator(DecelerateInterpolator(FLY_INTO_ANIMATION_DECELERATION_FACTOR))
+                })
+        }
     }
 
     fun setOnMapClickListener(operation: () -> Unit) {

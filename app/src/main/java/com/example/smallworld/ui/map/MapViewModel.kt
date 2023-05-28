@@ -12,8 +12,11 @@ import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.map.components.BottomSheetVisibility
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
+import com.example.smallworld.util.combine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -25,11 +28,19 @@ enum class MapSearchResultsState {
     RESULTS
 }
 
+data class MapScreenCameraState(
+    val latitude: Double,
+    val longitude: Double,
+    val zoom: Double,
+    val bearing: Double
+)
+
 data class MapScreenState(
     val query: String = "",
     val searchResults: List<User> = emptyList(),
     val searchResultsState: MapSearchResultsState = MapSearchResultsState.NO_QUERY,
     val bottomSheetVisibility: BottomSheetVisibility = BottomSheetVisibility.HIDDEN,
+    val cameraState: MapScreenCameraState? = null,
     val profile: Profile? = null,
 )
 
@@ -39,7 +50,8 @@ class MapViewModel @Inject constructor(
     private val networkService: NetworkService,
     private val snackBarMessageBus: SnackBarMessageBus,
     private val profileRepository: ProfileRepository,
-    private val friendsRepository: FriendsRepository
+    private val friendsRepository: FriendsRepository,
+    private val permissionsManager: PermissionsManager
 ) : ViewModel() {
     private val query: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -83,18 +95,53 @@ class MapViewModel @Inject constructor(
     private val _moveBottomSheet = MutableSharedFlow<BottomSheetVisibility>()
     val moveBottomSheet: SharedFlow<BottomSheetVisibility> = _moveBottomSheet
 
+    private val _isLocationEnabled = MutableStateFlow(false)
+    val isLocationEnabled: StateFlow<Boolean> = _isLocationEnabled
+
+    private val _onRequestLocationPermissions = Channel<Unit>()
+    val onRequestLocationPermissions: ReceiveChannel<Unit> = _onRequestLocationPermissions
+
     private val _goToCurrentLocation = MutableSharedFlow<Unit>()
     val goToCurrentLocation: SharedFlow<Unit> = _goToCurrentLocation
+
+    private val _flyIntoCurrentLocation = Channel<Unit>()
+    val flyIntoCurrentLocation: ReceiveChannel<Unit> = _flyIntoCurrentLocation
+
+    private val cameraState: MutableStateFlow<MapScreenCameraState?> = MutableStateFlow(null)
 
     val state: StateFlow<MapScreenState> = combine(
         query,
         searchResults,
         searchResultsState,
         bottomSheetVisibility,
+        cameraState,
         profile
-    ) { query, searchResults, searchResultsState, bottomSheetVisibility, profile ->
-        MapScreenState(query, searchResults, searchResultsState, bottomSheetVisibility, profile)
+    ) { query, searchResults, searchResultsState, bottomSheetVisibility, cameraState, profile ->
+        MapScreenState(
+            query = query,
+            searchResults = searchResults,
+            searchResultsState = searchResultsState,
+            bottomSheetVisibility = bottomSheetVisibility,
+            cameraState = cameraState,
+            profile = profile
+        )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MapScreenState())
+
+    init {
+        viewModelScope.launch {
+            if (permissionsManager.hasLocationPermissions) {
+                _flyIntoCurrentLocation.send(Unit)
+                _isLocationEnabled.value = true
+            } else _onRequestLocationPermissions.send(Unit)
+        }
+    }
+
+    fun onLocationPermissionsResult(havePermissions: Boolean) {
+        viewModelScope.launch {
+            _isLocationEnabled.value = havePermissions
+            if (havePermissions) _flyIntoCurrentLocation.send(Unit)
+        }
+    }
 
     fun onQueryChange(value: String) {
         query.value = value
@@ -186,5 +233,14 @@ class MapViewModel @Inject constructor(
 
     fun onSheetVisibilityChanged(visibility: BottomSheetVisibility) {
         bottomSheetVisibility.value = visibility
+    }
+
+    fun saveCameraPosition(latitude: Double, longitude: Double, zoom: Double, bearing: Double) {
+        cameraState.value = MapScreenCameraState(
+            latitude = latitude,
+            longitude = longitude,
+            zoom = zoom,
+            bearing = bearing
+        )
     }
 }
