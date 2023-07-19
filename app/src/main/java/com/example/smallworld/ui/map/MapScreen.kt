@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +36,8 @@ fun MapScreen(
     viewModel: MapViewModel, modifier: Modifier = Modifier
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
+    val currentLocationButtonState =
+        viewModel.currentLocationButtonState.collectAsStateWithLifecycle()
 
     val searchBarActive = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
@@ -101,16 +104,23 @@ fun MapScreen(
                 )
             }
             FloatingActionButton(
-                onClick = viewModel::onGoToCurrentLocation,
+                onClick = viewModel::onCurrentLocationClick,
                 Modifier
                     .padding(end = 16.dp)
                     .align(Alignment.End),
                 shape = MaterialTheme.shapes.extraLarge
             ) {
-                Icon(
-                    imageVector = Icons.Filled.MyLocation,
-                    contentDescription = stringResource(R.string.map_screen_current_location_button_content_description)
-                )
+                when (currentLocationButtonState.value) {
+                    CurrentLocationButtonState.GO_T0_LOCATION -> Icon(
+                        imageVector = Icons.Filled.MyLocation,
+                        contentDescription = stringResource(R.string.map_screen_current_location_button_content_description)
+                    )
+
+                    CurrentLocationButtonState.UPDATE_LOCATION -> Icon(
+                        imageVector = Icons.Filled.Sync,
+                        contentDescription = stringResource(R.string.map_screen_update_location_button_content_description)
+                    )
+                }
             }
         }
         BottomSheet(
@@ -120,7 +130,7 @@ fun MapScreen(
                 ProfileComponent(
                     it,
                     onSendRequestButtonClick = viewModel::sendRequest,
-                    onDeclineRequesButtonClickt = viewModel::declineRequest,
+                    onDeclineRequestButtonClick = viewModel::declineRequest,
                     onAcceptRequestButtonClick = viewModel::acceptRequest
                 )
             }
@@ -136,16 +146,19 @@ private fun MapComponent(
 ) {
     val viewModelStoreOwner = LocalViewModelStoreOwner.current
     AndroidViewBinding(
-        LayoutFragmentContainerBinding::inflate, modifier = Modifier.fillMaxSize()
-    ) {
-        fragmentContainerView.getFragment<MapFragment>().apply {
-            setOnMapClickListener(onClick)
-            setCompassMargins(
-                top = compassMarginTop, right = compassMarginRight
-            )
-            setViewModelStoreOwner(
-                viewModelStoreOwner ?: error("LocalViewModelStoreOwner not defined.")
-            )
-        }
-    }
+        { inflater, parent, attachToParent ->
+            val binding = LayoutFragmentContainerBinding.inflate(inflater, parent, attachToParent)
+            binding.fragmentContainerView.getFragment<MapFragment>().apply {
+                setOnMapClickListener(onClick)
+                setCompassMargins(
+                    top = compassMarginTop, right = compassMarginRight
+                )
+                setViewModelStoreOwner(
+                    viewModelStoreOwner ?: error("LocalViewModelStoreOwner not defined.")
+                )
+            }
+            binding
+        },
+        modifier = Modifier.fillMaxSize()
+    ) {}
 }

@@ -32,7 +32,7 @@ fun ProfileComponent(
     profile: Profile,
     onSendRequestButtonClick: () -> Unit,
     onAcceptRequestButtonClick: () -> Unit,
-    onDeclineRequesButtonClickt: () -> Unit,
+    onDeclineRequestButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -61,7 +61,7 @@ fun ProfileComponent(
                 modifier = Modifier.padding(top = 5.dp),
                 onSendRequestButtonClick = onSendRequestButtonClick,
                 onAcceptRequestButtonClick = onAcceptRequestButtonClick,
-                onDeclineRequesButtonClickt = onDeclineRequesButtonClickt
+                onDeclineRequesButtonClickt = onDeclineRequestButtonClick
             )
         }
     }
@@ -197,5 +197,5 @@ fun ProfilePreview() {
         Profile("", "jared", FriendshipStatus.NOT_FRIENDS),
         onAcceptRequestButtonClick = {},
         onSendRequestButtonClick = {},
-        onDeclineRequesButtonClickt = {})
+        onDeclineRequestButtonClick = {})
 }

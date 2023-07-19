@@ -34,6 +34,7 @@
 
     <string name="map_search_no_results">No results found for "%s"</string>
     <string name="map_screen_current_location_button_content_description">Go to current location</string>
+    <string name="map_screen_update_location_button_content_description">Update location</string>
 
     <string name="profile_add_friend_button_text">Add Friend</string>
     <string name="profile_sent_request_button_text">Sent</string>

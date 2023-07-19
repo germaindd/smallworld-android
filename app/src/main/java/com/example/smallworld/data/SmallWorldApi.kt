@@ -5,11 +5,13 @@ import com.example.smallworld.data.friends.dto.AcceptRequestDto
 import com.example.smallworld.data.friends.dto.DeclineRequestDto
 import com.example.smallworld.data.friends.dto.FriendRequestDto
 import com.example.smallworld.data.friends.dto.SendRequestDto
+import com.example.smallworld.data.location.dto.UpdateLocationDto
 import com.example.smallworld.data.profile.ProfileDto
 import com.example.smallworld.data.search.UserDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface SmallWorldApi {
@@ -30,4 +32,7 @@ interface SmallWorldApi {
 
     @POST("friends/requests/decline")
     suspend fun declineRequest(@Body declineRequestDto: DeclineRequestDto)
+
+    @PUT("location")
+    suspend fun updateLocation(@Body updateLocationDto: UpdateLocationDto)
 }

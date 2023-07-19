@@ -1,8 +1,11 @@
 package com.example.smallworld.ui.map
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.friends.FriendsRepository
+import com.example.smallworld.data.location.LocationRepository
+import com.example.smallworld.data.location.UpdateLocation
 import com.example.smallworld.data.profile.Profile
 import com.example.smallworld.data.profile.ProfileRepository
 import com.example.smallworld.data.profile.models.FriendshipStatus
@@ -28,6 +31,11 @@ enum class MapSearchResultsState {
     RESULTS
 }
 
+enum class CurrentLocationButtonState {
+    GO_T0_LOCATION,
+    UPDATE_LOCATION
+}
+
 data class MapScreenCameraState(
     val latitude: Double,
     val longitude: Double,
@@ -51,7 +59,9 @@ class MapViewModel @Inject constructor(
     private val snackBarMessageBus: SnackBarMessageBus,
     private val profileRepository: ProfileRepository,
     private val friendsRepository: FriendsRepository,
-    private val permissionsManager: PermissionsManager
+    private val permissionsManager: PermissionsManager,
+    private val locationRepository: LocationRepository,
+    private val locationProvider: LocationProvider
 ) : ViewModel() {
     private val query: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -98,6 +108,11 @@ class MapViewModel @Inject constructor(
     private val _isLocationEnabled = MutableStateFlow(false)
     val isLocationEnabled: StateFlow<Boolean> = _isLocationEnabled
 
+    private val _currentLocationButtonState =
+        MutableStateFlow(CurrentLocationButtonState.GO_T0_LOCATION)
+    val currentLocationButtonState: StateFlow<CurrentLocationButtonState> =
+        _currentLocationButtonState
+
     private val _onRequestLocationPermissions = Channel<Unit>()
     val onRequestLocationPermissions: ReceiveChannel<Unit> = _onRequestLocationPermissions
 
@@ -130,8 +145,8 @@ class MapViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             if (permissionsManager.hasLocationPermissions) {
-                _flyIntoCurrentLocation.send(Unit)
                 _isLocationEnabled.value = true
+                _flyIntoCurrentLocation.send(Unit)
             } else _onRequestLocationPermissions.send(Unit)
         }
     }
@@ -166,9 +181,17 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun onGoToCurrentLocation() {
+    @SuppressLint("MissingPermission") // button would not be visible if user had not already granted permission
+    fun onCurrentLocationClick() {
         viewModelScope.launch {
-            _goToCurrentLocation.emit(Unit)
+            when (currentLocationButtonState.value) {
+                CurrentLocationButtonState.GO_T0_LOCATION -> _goToCurrentLocation.emit(Unit)
+                CurrentLocationButtonState.UPDATE_LOCATION -> {
+                    locationProvider.getCurrentLocation().let {
+                        locationRepository.updateLocation(UpdateLocation(it.latitude, it.longitude))
+                    }
+                }
+            }
         }
     }
 
@@ -242,5 +265,12 @@ class MapViewModel @Inject constructor(
             zoom = zoom,
             bearing = bearing
         )
+    }
+
+    fun setIsTrackingLocation(isTracking: Boolean) {
+        _currentLocationButtonState.value =
+            if (isTracking)
+                CurrentLocationButtonState.UPDATE_LOCATION
+            else CurrentLocationButtonState.GO_T0_LOCATION
     }
 }
