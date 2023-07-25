@@ -21,6 +21,7 @@ private fun getStringResource(snackBarMessage: SnackBarMessage) =
         SnackBarMessage.SIGN_IN_ERROR_UNKNOWN -> R.string.sign_in_something_went_wrong
         SnackBarMessage.SIGN_UP_ERROR_UNKNOWN -> R.string.sign_up_unknown_error
         SnackBarMessage.NO_NETWORK -> R.string.global_snackbar_check_network
+        SnackBarMessage.MAP_SCREEN_COULD_NOT_FIND_FRIENDS_LOCATION -> R.string.map_screen_could_not_find_friends_location_snackbar_message
     }
 
 @OptIn(ExperimentalMaterial3Api::class)

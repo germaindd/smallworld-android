@@ -13,4 +13,15 @@ class LocationRepository @Inject constructor(
     suspend fun updateLocation(location: UpdateLocation) = withContext(dispatcher) {
         api.updateLocation(location.toDto())
     }
+
+    suspend fun getFriendsLocations() = withContext(dispatcher) {
+        api.getFriendsLocations().mapNotNull {
+            if (it.latitude == null || it.longitude == null) null
+            else Location(
+                it.userId,
+                it.longitude,
+                it.latitude
+            )
+        }
+    }
 }

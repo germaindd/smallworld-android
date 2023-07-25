@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.friends.FriendsRepository
+import com.example.smallworld.data.location.Location
 import com.example.smallworld.data.location.LocationRepository
 import com.example.smallworld.data.location.UpdateLocation
 import com.example.smallworld.data.profile.Profile
@@ -15,7 +16,6 @@ import com.example.smallworld.services.NetworkService
 import com.example.smallworld.ui.map.components.BottomSheetVisibility
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
-import com.example.smallworld.util.combine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -48,7 +48,6 @@ data class MapScreenState(
     val searchResults: List<User> = emptyList(),
     val searchResultsState: MapSearchResultsState = MapSearchResultsState.NO_QUERY,
     val bottomSheetVisibility: BottomSheetVisibility = BottomSheetVisibility.HIDDEN,
-    val cameraState: MapScreenCameraState? = null,
     val profile: Profile? = null,
 )
 
@@ -105,6 +104,9 @@ class MapViewModel @Inject constructor(
     private val _moveBottomSheet = MutableSharedFlow<BottomSheetVisibility>()
     val moveBottomSheet: SharedFlow<BottomSheetVisibility> = _moveBottomSheet
 
+    private val _friendsLocations = MutableStateFlow<List<Location>>(emptyList())
+    val friendsLocations: StateFlow<List<Location>> = _friendsLocations
+
     private val _isLocationEnabled = MutableStateFlow(false)
     val isLocationEnabled: StateFlow<Boolean> = _isLocationEnabled
 
@@ -122,32 +124,41 @@ class MapViewModel @Inject constructor(
     private val _flyIntoCurrentLocation = Channel<Unit>()
     val flyIntoCurrentLocation: ReceiveChannel<Unit> = _flyIntoCurrentLocation
 
-    private val cameraState: MutableStateFlow<MapScreenCameraState?> = MutableStateFlow(null)
+    private val _goToLocation = MutableSharedFlow<Location>()
+    val goToLocation: SharedFlow<Location> = _goToLocation
+
+    private val _cameraState: MutableStateFlow<MapScreenCameraState?> = MutableStateFlow(null)
+    val cameraState: StateFlow<MapScreenCameraState?> = _cameraState
 
     val state: StateFlow<MapScreenState> = combine(
         query,
         searchResults,
         searchResultsState,
         bottomSheetVisibility,
-        cameraState,
         profile
-    ) { query, searchResults, searchResultsState, bottomSheetVisibility, cameraState, profile ->
+    ) { query, searchResults, searchResultsState, bottomSheetVisibility, profile ->
         MapScreenState(
             query = query,
             searchResults = searchResults,
             searchResultsState = searchResultsState,
             bottomSheetVisibility = bottomSheetVisibility,
-            cameraState = cameraState,
             profile = profile
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MapScreenState())
 
     init {
         viewModelScope.launch {
+            fetchFriendsLocations()
             if (permissionsManager.hasLocationPermissions) {
                 _isLocationEnabled.value = true
                 _flyIntoCurrentLocation.send(Unit)
             } else _onRequestLocationPermissions.send(Unit)
+        }
+    }
+
+    private fun fetchFriendsLocations() {
+        viewModelScope.launch {
+            _friendsLocations.value = locationRepository.getFriendsLocations()
         }
     }
 
@@ -164,21 +175,41 @@ class MapViewModel @Inject constructor(
 
     fun onSearchItemClick(user: User) {
         viewModelScope.launch {
-            val profileResponse = try {
-                profileRepository.getProfile(user.id)
-            } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
-                    Timber.e(e)
-                    snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
-                } else {
-                    snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
-                }
-                return@launch
-            }
-
-            _moveBottomSheet.emit(BottomSheetVisibility.SHOWING)
-            profile.value = profileResponse
+            val profile = goToUserProfile(user.id)
+            if (profile?.friendshipStatus == FriendshipStatus.FRIENDS)
+                friendsLocations.value.firstOrNull {
+                    it.userId == user.id
+                }?.let { location ->
+                    _goToLocation.emit(location)
+                } ?: snackBarMessageBus.sendMessage(
+                    SnackBarMessage.MAP_SCREEN_COULD_NOT_FIND_FRIENDS_LOCATION
+                )
         }
+    }
+
+    fun onFriendLocationClick(location: Location) {
+        viewModelScope.launch {
+            goToUserProfile(location.userId)
+            _goToLocation.emit(location)
+        }
+    }
+
+    private suspend fun goToUserProfile(userId: String): Profile? {
+        val profileResponse = try {
+            profileRepository.getProfile(userId)
+        } catch (e: Throwable) {
+            if (networkService.isOnlineStateFlow.value) {
+                Timber.e(e)
+                snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+            } else {
+                snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
+            }
+            return null
+        }
+
+        _moveBottomSheet.emit(BottomSheetVisibility.SHOWING)
+        profile.value = profileResponse
+        return profileResponse
     }
 
     @SuppressLint("MissingPermission") // button would not be visible if user had not already granted permission
@@ -188,7 +219,19 @@ class MapViewModel @Inject constructor(
                 CurrentLocationButtonState.GO_T0_LOCATION -> _goToCurrentLocation.emit(Unit)
                 CurrentLocationButtonState.UPDATE_LOCATION -> {
                     locationProvider.getCurrentLocation().let {
-                        locationRepository.updateLocation(UpdateLocation(it.latitude, it.longitude))
+                        try {
+                            locationRepository.updateLocation(
+                                UpdateLocation(it.latitude, it.longitude)
+                            )
+                        } catch (e: Throwable) {
+                            if (networkService.isOnlineStateFlow.value) {
+                                Timber.e(e)
+                                snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
+                            } else {
+                                snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
+                            }
+                            return@launch
+                        }
                     }
                 }
             }
@@ -259,7 +302,7 @@ class MapViewModel @Inject constructor(
     }
 
     fun saveCameraPosition(latitude: Double, longitude: Double, zoom: Double, bearing: Double) {
-        cameraState.value = MapScreenCameraState(
+        _cameraState.value = MapScreenCameraState(
             latitude = latitude,
             longitude = longitude,
             zoom = zoom,

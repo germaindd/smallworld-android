@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.annotation.RequiresPermission
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -13,8 +15,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
+import com.example.smallworld.R
+import com.example.smallworld.data.location.Location
 import com.example.smallworld.ui.map.LocationProvider
-import com.example.smallworld.ui.map.MapScreenState
 import com.example.smallworld.ui.map.MapUtils
 import com.example.smallworld.ui.map.MapViewModel
 import com.example.smallworld.ui.map.PermissionsManager
@@ -35,6 +38,7 @@ import com.mapbox.maps.plugin.viewport.data.FollowPuckViewportStateBearing
 import com.mapbox.maps.plugin.viewport.data.FollowPuckViewportStateOptions
 import com.mapbox.maps.plugin.viewport.state.FollowPuckViewportState
 import com.mapbox.maps.plugin.viewport.viewport
+import com.mapbox.maps.viewannotation.viewAnnotationOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,10 +60,16 @@ class MapFragment : Fragment() {
     lateinit var permissionsManager: PermissionsManager
 
     @Inject
+    lateinit var locationDiffTool: LocationDiffTool
+
+    @Inject
     lateinit var locationProvider: LocationProvider
 
     private var _mapView: MapView? = null
     private val mapView: MapView get() = _mapView!!
+
+    private val userIdToViewAnnotationMap = hashMapOf<String, ImageView>()
+    private var oldLocations: Iterable<Location> = emptySet()
 
     private var _viewModel: MapViewModel? = null
     private val viewModel get() = _viewModel ?: error("_viewModel not yet initialized")
@@ -154,8 +164,8 @@ class MapFragment : Fragment() {
             }
         }
         lifecycleScope.launch {
-            viewModel.state.collect { mapScreenState: MapScreenState ->
-                val cameraState = mapScreenState.cameraState ?: return@collect
+            viewModel.cameraState.collect { cameraState ->
+                cameraState ?: return@collect
                 mapView.getMapboxMap().setCamera(
                     CameraOptions.Builder()
                         .center(Point.fromLngLat(cameraState.longitude, cameraState.latitude))
@@ -169,6 +179,63 @@ class MapFragment : Fragment() {
             viewModel.isLocationEnabled.collect { enabled ->
                 mapView.location.enabled = enabled
             }
+        }
+        lifecycleScope.launch {
+            viewModel.friendsLocations.collect { locations ->
+                updateFriendLocationAnnotations(locations)
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.goToLocation.collect { location ->
+                flyIntoLocation(location.longitude, location.latitude)
+            }
+        }
+    }
+
+    private fun updateFriendLocationAnnotations(locations: Iterable<Location>) {
+        val annotationManager = mapView.viewAnnotationManager
+
+        val (added, removed, updated) = locationDiffTool.diff(
+            oldLocations,
+            locations
+        )
+        oldLocations = locations
+
+        val imageWidth = (resources.displayMetrics.density * 36).toInt()
+        added.forEach { location ->
+            val imageView = ImageView(requireContext()).apply {
+                layoutParams = FrameLayout.LayoutParams(imageWidth, imageWidth)
+                setImageResource(R.drawable.account_circle)
+            }
+            annotationManager.addViewAnnotation(
+                imageView,
+                options = viewAnnotationOptions {
+                    geometry(Point.fromLngLat(location.longitude, location.latitude))
+                    allowOverlap(true)
+                }
+            )
+            imageView.setOnClickListener {
+                viewModel.onFriendLocationClick(location)
+            }
+            userIdToViewAnnotationMap[location.userId] = imageView
+        }
+
+        removed.forEach { location ->
+            annotationManager.removeViewAnnotation(
+                userIdToViewAnnotationMap[location.userId]
+                    ?: error("Location does not exist in locationToViewAnnotationMap")
+            )
+            userIdToViewAnnotationMap.remove(location.userId)
+        }
+
+        updated.forEach { location ->
+            val imageViewToUpdate = userIdToViewAnnotationMap[location.userId]
+                ?: error("Location does not exist in locationToViewAnnotationMap")
+            annotationManager.updateViewAnnotation(imageViewToUpdate,
+                viewAnnotationOptions {
+                    geometry(Point.fromLngLat(location.longitude, location.latitude))
+                }
+            )
         }
     }
 
@@ -237,6 +304,18 @@ class MapFragment : Fragment() {
                 duration(FLY_INTO_ANIMATION_DURATION_MILLISECONDS)
                 interpolator(DecelerateInterpolator(FLY_INTO_ANIMATION_DECELERATION_FACTOR))
                 animatorListener(MapUtils.onAnimationEndListener { trackViewportToLocationPuck() })
+            })
+    }
+
+    private fun flyIntoLocation(longitude: Double, latitude: Double) {
+        // stop tracking location if location is being tracked, or the transition will not happen
+        mapView.viewport.idle()
+        mapView.camera.flyTo(
+            CameraOptions.Builder().bearing(DEFAULT_BEARING).pitch(DEFAULT_PITCH)
+                .center(Point.fromLngLat(longitude, latitude)).zoom(DEFAULT_ZOOM).build(),
+            MapAnimationOptions.mapAnimationOptions {
+                duration(FLY_INTO_ANIMATION_DURATION_MILLISECONDS)
+                interpolator(DecelerateInterpolator(FLY_INTO_ANIMATION_DECELERATION_FACTOR))
             })
     }
 
