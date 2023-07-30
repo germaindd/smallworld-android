@@ -81,11 +81,9 @@ class MapFragment : Fragment() {
     }
     private val viewportStatusObserver = ViewportStatusObserver { _, to: ViewportStatus, _ ->
         when (to) {
-            is ViewportStatus.Transition -> {}
-            ViewportStatus.Idle -> viewModel.setIsTrackingLocation(false)
-            is ViewportStatus.State ->
-                if (to.state is FollowPuckViewportState)
-                    viewModel.setIsTrackingLocation(true)
+            ViewportStatus.Idle -> viewModel.setTrackLocation(false)
+            is ViewportStatus.State,
+            is ViewportStatus.Transition -> Unit
         }
     }
 
@@ -190,6 +188,11 @@ class MapFragment : Fragment() {
                 flyIntoLocation(location.longitude, location.latitude)
             }
         }
+        lifecycleScope.launch {
+            viewModel.isTrackingLocation.collect { tracking ->
+                if (tracking) trackViewportToLocationPuck() else mapView.viewport.idle()
+            }
+        }
     }
 
     private fun updateFriendLocationAnnotations(locations: Iterable<Location>) {
@@ -258,7 +261,7 @@ class MapFragment : Fragment() {
                         GO_TO_LOCATION_ANIMATION_DECELERATION_FACTOR
                     )
                 )
-                animatorListener(MapUtils.onAnimationEndListener { trackViewportToLocationPuck() })
+                animatorListener(MapUtils.onAnimationEndListener { viewModel.setTrackLocation(true) })
             })
     }
 
@@ -303,7 +306,7 @@ class MapFragment : Fragment() {
             MapAnimationOptions.mapAnimationOptions {
                 duration(FLY_INTO_ANIMATION_DURATION_MILLISECONDS)
                 interpolator(DecelerateInterpolator(FLY_INTO_ANIMATION_DECELERATION_FACTOR))
-                animatorListener(MapUtils.onAnimationEndListener { trackViewportToLocationPuck() })
+                animatorListener(MapUtils.onAnimationEndListener { viewModel.setTrackLocation(true) })
             })
     }
 

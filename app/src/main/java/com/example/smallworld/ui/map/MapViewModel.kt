@@ -110,10 +110,16 @@ class MapViewModel @Inject constructor(
     private val _isLocationEnabled = MutableStateFlow(false)
     val isLocationEnabled: StateFlow<Boolean> = _isLocationEnabled
 
-    private val _currentLocationButtonState =
-        MutableStateFlow(CurrentLocationButtonState.GO_T0_LOCATION)
-    val currentLocationButtonState: StateFlow<CurrentLocationButtonState> =
-        _currentLocationButtonState
+    private val _isTrackingLocation = MutableStateFlow(false)
+    val isTrackingLocation: StateFlow<Boolean> = _isTrackingLocation
+
+    val currentLocationButtonState =
+        isTrackingLocation.map { if (it) CurrentLocationButtonState.UPDATE_LOCATION else CurrentLocationButtonState.GO_T0_LOCATION }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                CurrentLocationButtonState.GO_T0_LOCATION
+            )
 
     private val _onRequestLocationPermissions = Channel<Unit>()
     val onRequestLocationPermissions: ReceiveChannel<Unit> = _onRequestLocationPermissions
@@ -310,10 +316,7 @@ class MapViewModel @Inject constructor(
         )
     }
 
-    fun setIsTrackingLocation(isTracking: Boolean) {
-        _currentLocationButtonState.value =
-            if (isTracking)
-                CurrentLocationButtonState.UPDATE_LOCATION
-            else CurrentLocationButtonState.GO_T0_LOCATION
+    fun setTrackLocation(track: Boolean) {
+        _isTrackingLocation.value = track
     }
 }
