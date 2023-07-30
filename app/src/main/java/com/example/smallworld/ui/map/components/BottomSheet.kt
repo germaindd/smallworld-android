@@ -59,7 +59,16 @@ fun rememberBottomSheetState(initialValue: BottomSheetVisibility): BottomSheetSt
     }
 }
 
+// extraSpaceForBounce is extra padding added to the bottom of the bottom sheet BELOW it's main
+// content. this is to allow wiggle room for when the animation's elasticity allows it to fling up
+// slightly further than the size of the bottom sheet when it's resting in the SHOWING STATE, AND
+// also if the user drags up when in the SHOWING state, the element is allowed to move up slightly
+// as well
 private val extraSpaceForBounce = 100.dp
+
+// extra padding to add to the offset for when the bottom sheet is hidden or it's shadow will be
+// visible at the bottom edge of the container that stows below
+private const val HIDDEN_BOTTOM_SHEET_UPPER_PADDING = 10f
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -68,18 +77,19 @@ fun BottomSheet(
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
-
-    val contentSize = remember { mutableStateOf(200f) }
+    // because the value will only be set after the first frame, in onGloballyPositioned below, we
+    // set the initial value of arbitrarily high to ensure that the bottom sheet does not show on
+    // the first frame, even for very high content sizes
+    val contentSize = remember { mutableStateOf(1000000f) }
     val anchors = remember(contentSize.value) {
         mapOf(
             0f to BottomSheetVisibility.SHOWING,
-            contentSize.value to BottomSheetVisibility.HIDDEN,
+            contentSize.value + HIDDEN_BOTTOM_SHEET_UPPER_PADDING to BottomSheetVisibility.HIDDEN,
         )
     }
     Surface(
         modifier = modifier
             .offset {
-                // extraSpaceForBounce compensating for the extra padding added below
                 IntOffset(
                     y = bottomSheetState.swipeableState.offset.value.roundToInt() + extraSpaceForBounce.roundToPx(),
                     x = 0
