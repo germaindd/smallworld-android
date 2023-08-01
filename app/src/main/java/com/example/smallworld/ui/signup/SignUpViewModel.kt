@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
 import com.example.smallworld.data.auth.models.SignUpValidationResult
-import com.example.smallworld.services.AuthService
-import com.example.smallworld.services.NetworkService
+import com.example.smallworld.data.auth.AuthTokenStore
+import com.example.smallworld.util.ConnectivityStatus
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,9 +21,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val authService: AuthService,
+    private val authTokenStore: AuthTokenStore,
     private val snackBarMessageBus: SnackBarMessageBus,
-    private val networkService: NetworkService
+    private val connectivityStatus: ConnectivityStatus
 ) : ViewModel() {
 
     // Screen One
@@ -118,7 +118,7 @@ class SignUpViewModel @Inject constructor(
                         checkIfOfflineAndTriggerSnackbar()
                         return@launch
                     }
-                    authService.setAccessTokens(tokens)
+                    authTokenStore.setAccessTokens(tokens)
                     _onSignUpSuccess.emit(Unit)
                 } else _usernameError.value = usernameValidity
             }
@@ -126,7 +126,7 @@ class SignUpViewModel @Inject constructor(
 
     private suspend fun checkIfOfflineAndTriggerSnackbar() {
         snackBarMessageBus.sendMessage(
-            if (networkService.isOnlineStateFlow.value)
+            if (connectivityStatus.isOnlineStateFlow.value)
                 SnackBarMessage.SIGN_UP_ERROR_UNKNOWN
             else SnackBarMessage.NO_NETWORK
         )

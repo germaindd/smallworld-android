@@ -1,7 +1,6 @@
 package com.example.smallworld.data.auth
 
 import com.example.smallworld.data.SmallWorldAuthApi
-import com.example.smallworld.services.AuthService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -15,13 +14,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 class AuthOkhttpInterceptor @Inject constructor(
-    private val authService: AuthService,
+    private val authTokenStore: AuthTokenStore,
     private val authApi: SmallWorldAuthApi
 ) : Interceptor {
     private val isRefreshingToken = AtomicBoolean()
     private fun authenticateRequest(request: Request) = request
         .newBuilder()
-        .addHeader("authorization", "Bearer ${authService.requireAccessToken()}")
+        .addHeader("authorization", "Bearer ${authTokenStore.requireAccessToken()}")
         .build()
 
     override fun intercept(chain: Interceptor.Chain): Response = runBlocking {
@@ -48,7 +47,7 @@ class AuthOkhttpInterceptor @Inject constructor(
                 Timber.d("ID: $uuid \nRefreshing tokens")
                 // request new tokens from server
                 val tokens = try {
-                    authApi.refreshTokens("Bearer ${authService.requireRefreshToken()}")
+                    authApi.refreshTokens("Bearer ${authTokenStore.requireRefreshToken()}")
                 } catch (e: HttpException) {
                     if (e.code() == HttpURLConnection.HTTP_UNAUTHORIZED)
                         TODO("log the user out")
@@ -56,7 +55,7 @@ class AuthOkhttpInterceptor @Inject constructor(
                 }
 
                 // update access tokens
-                authService.setAccessTokens(tokens)
+                authTokenStore.setAccessTokens(tokens)
                 Timber.d("ID: $uuid \nToken refresh successful")
                 isRefreshingToken.set(false)
             }

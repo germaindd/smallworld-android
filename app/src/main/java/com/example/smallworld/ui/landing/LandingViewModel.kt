@@ -2,7 +2,7 @@ package com.example.smallworld.ui.landing
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.smallworld.services.NetworkService
+import com.example.smallworld.util.ConnectivityStatus
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LandingViewModel @Inject constructor(
-    private val networkService: NetworkService,
+    private val connectivityStatus: ConnectivityStatus,
     private val snackBarMessageBus: SnackBarMessageBus
 ) : ViewModel() {
     private val _onNavigateToSignIn = MutableSharedFlow<Unit>()
@@ -24,7 +24,7 @@ class LandingViewModel @Inject constructor(
 
     private fun doIfOnline(operation: suspend () -> Unit) {
         viewModelScope.launch {
-            if (networkService.isOnlineStateFlow.value) {
+            if (connectivityStatus.isOnlineStateFlow.value) {
                 operation()
             } else {
                 snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)

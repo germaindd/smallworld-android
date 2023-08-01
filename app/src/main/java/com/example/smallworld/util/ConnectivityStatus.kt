@@ -1,4 +1,4 @@
-package com.example.smallworld.services
+package com.example.smallworld.util
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -14,12 +14,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NetworkService @Inject constructor(
+class ConnectivityStatus @Inject constructor(
     @ApplicationContext context: Context,
     @ApplicationScope private val coroutineScope: CoroutineScope
 ) {
     // callback below will get called immediately and update
-    private val _isOnline = MutableStateFlow<Boolean>(false)
+    private val _isOnline = MutableStateFlow(false)
     val isOnlineStateFlow: StateFlow<Boolean> get() = _isOnline
 
     init {

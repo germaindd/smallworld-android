@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.friends.FriendsRepository
 import com.example.smallworld.data.friends.dto.FriendRequest
-import com.example.smallworld.services.NetworkService
+import com.example.smallworld.util.ConnectivityStatus
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,7 +32,7 @@ sealed class NotificationsResult {
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val friendsRepository: FriendsRepository,
-    private val networkService: NetworkService,
+    private val connectivityStatus: ConnectivityStatus,
     private val snackBarMessageBus: SnackBarMessageBus
 ) : ViewModel() {
     var firstVisibleItemOffset: Int = 0
@@ -73,7 +73,7 @@ class NotificationsViewModel @Inject constructor(
         val requests = try {
             friendsRepository.getRequests()
         } catch (e: Throwable) {
-            if (networkService.isOnlineStateFlow.value) {
+            if (connectivityStatus.isOnlineStateFlow.value) {
                 Timber.e(e)
                 snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
             } else {
@@ -101,7 +101,7 @@ class NotificationsViewModel @Inject constructor(
             try {
                 friendsRepository.acceptRequest(acceptingRequest.userId)
             } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
+                if (connectivityStatus.isOnlineStateFlow.value) {
                     Timber.e(e)
                     snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                 } else {
@@ -126,7 +126,7 @@ class NotificationsViewModel @Inject constructor(
             try {
                 friendsRepository.declineRequest(decliningRequest.userId)
             } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
+                if (connectivityStatus.isOnlineStateFlow.value) {
                     Timber.e(e)
                     snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                 } else {

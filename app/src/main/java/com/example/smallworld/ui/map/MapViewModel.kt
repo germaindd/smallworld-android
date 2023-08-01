@@ -12,7 +12,7 @@ import com.example.smallworld.data.profile.ProfileRepository
 import com.example.smallworld.data.profile.models.FriendshipStatus
 import com.example.smallworld.data.search.SearchRepository
 import com.example.smallworld.data.search.User
-import com.example.smallworld.services.NetworkService
+import com.example.smallworld.util.ConnectivityStatus
 import com.example.smallworld.ui.map.components.BottomSheetVisibility
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
@@ -54,7 +54,7 @@ data class MapScreenState(
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
-    private val networkService: NetworkService,
+    private val connectivityStatus: ConnectivityStatus,
     private val snackBarMessageBus: SnackBarMessageBus,
     private val profileRepository: ProfileRepository,
     private val friendsRepository: FriendsRepository,
@@ -77,7 +77,7 @@ class MapViewModel @Inject constructor(
             else try {
                 searchRepository.search(it)
             } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
+                if (connectivityStatus.isOnlineStateFlow.value) {
                     Timber.e(e)
                     snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                 } else {
@@ -204,7 +204,7 @@ class MapViewModel @Inject constructor(
         val profileResponse = try {
             profileRepository.getProfile(userId)
         } catch (e: Throwable) {
-            if (networkService.isOnlineStateFlow.value) {
+            if (connectivityStatus.isOnlineStateFlow.value) {
                 Timber.e(e)
                 snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
             } else {
@@ -230,7 +230,7 @@ class MapViewModel @Inject constructor(
                                 UpdateLocation(it.latitude, it.longitude)
                             )
                         } catch (e: Throwable) {
-                            if (networkService.isOnlineStateFlow.value) {
+                            if (connectivityStatus.isOnlineStateFlow.value) {
                                 Timber.e(e)
                                 snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                             } else {
@@ -252,7 +252,7 @@ class MapViewModel @Inject constructor(
                 profile.value =
                     profile.value?.copy(friendshipStatus = FriendshipStatus.OUTGOING_REQUEST)
             } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
+                if (connectivityStatus.isOnlineStateFlow.value) {
                     Timber.e(e)
                     snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                 } else {
@@ -269,7 +269,7 @@ class MapViewModel @Inject constructor(
             try {
                 friendsRepository.acceptRequest(userId)
             } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
+                if (connectivityStatus.isOnlineStateFlow.value) {
                     Timber.e(e)
                     snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                 } else {
@@ -289,7 +289,7 @@ class MapViewModel @Inject constructor(
             try {
                 friendsRepository.declineRequest(userId)
             } catch (e: Throwable) {
-                if (networkService.isOnlineStateFlow.value) {
+                if (connectivityStatus.isOnlineStateFlow.value) {
                     Timber.e(e)
                     snackBarMessageBus.sendMessage(SnackBarMessage.ERROR_UNKNOWN)
                 } else {

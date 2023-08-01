@@ -3,8 +3,8 @@ package com.example.smallworld.ui.signin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
-import com.example.smallworld.services.AuthService
-import com.example.smallworld.services.NetworkService
+import com.example.smallworld.data.auth.AuthTokenStore
+import com.example.smallworld.util.ConnectivityStatus
 import com.example.smallworld.ui.snackbar.SnackBarMessage
 import com.example.smallworld.ui.snackbar.SnackBarMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,9 +27,9 @@ data class SignInScreenState(
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val authService: AuthService,
+    private val authTokenStore: AuthTokenStore,
     private val snackBarMessageBus: SnackBarMessageBus,
-    private val networkService: NetworkService
+    private val connectivityStatus: ConnectivityStatus
 ) : ViewModel() {
     private val usernameOrEmail: MutableStateFlow<String> = MutableStateFlow("")
     private val password: MutableStateFlow<String> = MutableStateFlow("")
@@ -61,7 +61,7 @@ class SignInViewModel @Inject constructor(
             try {
                 val accessTokens =
                     authRepository.signIn(usernameOrEmail.value, password.value)
-                authService.setAccessTokens(accessTokens)
+                authTokenStore.setAccessTokens(accessTokens)
                 _onSignInSuccess.emit(Unit)
             } catch (e: HttpException) {
                 Timber.e(e)
@@ -73,7 +73,7 @@ class SignInViewModel @Inject constructor(
                 }
                 snackBarMessageBus.sendMessage(message)
             } catch (e: Throwable) {
-                if (!networkService.isOnlineStateFlow.value)
+                if (!connectivityStatus.isOnlineStateFlow.value)
                     snackBarMessageBus.sendMessage(SnackBarMessage.NO_NETWORK)
                 else {
                     Timber.e(e)

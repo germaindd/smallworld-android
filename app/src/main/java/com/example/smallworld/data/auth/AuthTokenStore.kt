@@ -1,4 +1,4 @@
-package com.example.smallworld.services
+package com.example.smallworld.data.auth
 
 import android.content.Context
 import com.example.smallworld.data.auth.models.JwtDto
@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AuthService @Inject constructor(@ApplicationContext context: Context) {
+class AuthTokenStore @Inject constructor(@ApplicationContext context: Context) {
     private val sharedPrefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
 
     private enum class Keys {
@@ -26,9 +26,11 @@ class AuthService @Inject constructor(@ApplicationContext context: Context) {
             .apply()
     }
 
-    fun isLoggedIn(): Boolean = sharedPrefs.getString(Keys.ACCESS_TOKEN.name, null) != null
+    fun getAccessToken(): String? = sharedPrefs.getString(Keys.ACCESS_TOKEN.name, null)
 
-    fun requireAccessToken(): String = sharedPrefs.getString(Keys.ACCESS_TOKEN.name, null)!!
+    fun getRefreshToken(): String? = sharedPrefs.getString(Keys.REFRESH_TOKEN.name, null)
 
-    fun requireRefreshToken(): String = sharedPrefs.getString(Keys.REFRESH_TOKEN.name, null)!!
+    fun requireAccessToken(): String = getAccessToken() ?: error("No access token in storage.")
+
+    fun requireRefreshToken(): String = getRefreshToken() ?: error("No refresh token in storage.")
 }
