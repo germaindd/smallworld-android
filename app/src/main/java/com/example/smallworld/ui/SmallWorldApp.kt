@@ -9,18 +9,18 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.example.smallworld.ui.home.homeScreen
-import com.example.smallworld.ui.home.navigateToHome
-import com.example.smallworld.ui.landing.landingScreen
-import com.example.smallworld.ui.landing.landingScreenRoute
-import com.example.smallworld.ui.landing.navigateToLanding
-import com.example.smallworld.ui.signin.navigateToSignIn
-import com.example.smallworld.ui.signin.signInScreen
-import com.example.smallworld.ui.signup.navigateToSignUpGraph
-import com.example.smallworld.ui.signup.signUpGraph
-import com.example.smallworld.ui.snackbar.SnackBarContainer
-import com.example.smallworld.ui.splash.splashScreen
-import com.example.smallworld.ui.splash.splashScreenRoute
+import com.example.smallworld.ui.flows.home.homeScreen
+import com.example.smallworld.ui.flows.home.navigateToHome
+import com.example.smallworld.ui.flows.landing.landingScreen
+import com.example.smallworld.ui.flows.landing.landingScreenRoute
+import com.example.smallworld.ui.flows.landing.navigateToLanding
+import com.example.smallworld.ui.flows.signin.navigateToSignIn
+import com.example.smallworld.ui.flows.signin.signInScreen
+import com.example.smallworld.ui.flows.signup.navigateToSignUpGraph
+import com.example.smallworld.ui.flows.signup.signUpGraph
+import com.example.smallworld.ui.components.snackbar.SnackBarContainer
+import com.example.smallworld.ui.flows.splash.splashScreen
+import com.example.smallworld.ui.flows.splash.splashScreenRoute
 
 @Composable
 fun SmallWorldApp(modifier: Modifier = Modifier) {
