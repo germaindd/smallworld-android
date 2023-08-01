@@ -1,15 +1,12 @@
 package com.example.smallworld.di
 
-import android.content.Context
 import com.example.smallworld.BuildConfig
-import com.example.smallworld.R
 import com.example.smallworld.data.SmallWorldApi
 import com.example.smallworld.data.SmallWorldAuthApi
 import com.example.smallworld.data.auth.AuthOkhttpInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
@@ -40,10 +37,8 @@ class AppModule {
     @Singleton
     @Provides
     @BaseUrl
-    fun provideApiBaseUrl(@ApplicationContext context: Context): String = when (BuildConfig.DEBUG) {
-        true -> context.getString(R.string.api_url)
-        false -> BuildConfig.API_BASE_URL
-    }
+    fun provideApiBaseUrl(): String =
+        BuildConfig.API_BASE_URL
 
     @Singleton
     @Provides

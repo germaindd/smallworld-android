@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
+import com.example.smallworld.BuildConfig
 import com.example.smallworld.R
 import com.example.smallworld.data.location.Location
 import com.example.smallworld.ui.map.LocationProvider
@@ -104,7 +105,9 @@ class MapFragment : Fragment() {
             requireContext(),
             MapInitOptions(
                 requireContext(),
-                styleUri = Style.MAPBOX_STREETS
+                styleUri = Style.MAPBOX_STREETS,
+                resourceOptions = ResourceOptions.Builder()
+                    .accessToken(BuildConfig.MAPBOX_ACCESS_TOKEN).build()
             )
         ).apply {
             logo.enabled = false
