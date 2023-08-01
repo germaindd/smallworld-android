@@ -1,4 +1,4 @@
-package com.example.smallworld.data.profile.models
+package com.example.smallworld.data.profile.enums
 
 enum class FriendshipStatus {
     NOT_FRIENDS,

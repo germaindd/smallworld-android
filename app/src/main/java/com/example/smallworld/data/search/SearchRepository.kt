@@ -1,6 +1,8 @@
 package com.example.smallworld.data.search
 
 import com.example.smallworld.data.SmallWorldApi
+import com.example.smallworld.data.search.model.User
+import com.example.smallworld.data.search.model.toUser
 import com.example.smallworld.di.DispatcherIO
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

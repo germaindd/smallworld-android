@@ -1,6 +1,8 @@
 package com.example.smallworld.data.profile
 
 import com.example.smallworld.data.SmallWorldApi
+import com.example.smallworld.data.profile.model.Profile
+import com.example.smallworld.data.profile.model.toProfile
 import com.example.smallworld.di.DispatcherIO
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

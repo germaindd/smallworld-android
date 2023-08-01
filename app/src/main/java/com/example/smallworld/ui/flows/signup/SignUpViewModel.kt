@@ -3,11 +3,11 @@ package com.example.smallworld.ui.flows.signup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smallworld.data.auth.AuthRepository
-import com.example.smallworld.data.auth.models.SignUpValidationResult
 import com.example.smallworld.data.auth.AuthTokenStore
-import com.example.smallworld.util.ConnectivityStatus
+import com.example.smallworld.data.auth.enums.SignUpValidationResult
 import com.example.smallworld.ui.components.snackbar.SnackBarMessage
 import com.example.smallworld.ui.components.snackbar.SnackBarMessageBus
+import com.example.smallworld.util.ConnectivityStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow

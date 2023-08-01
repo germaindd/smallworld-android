@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.smallworld.R
-import com.example.smallworld.data.auth.models.SignUpValidationResult
+import com.example.smallworld.data.auth.enums.SignUpValidationResult
 import com.example.smallworld.ui.components.PasswordTextField
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
@@ -69,9 +69,11 @@ private fun SignUpScreenOneContent(
                     SignUpValidationResult.INVALID_FORMAT -> {
                         { Text(text = stringResource(R.string.sign_up_invalid_email)) }
                     }
+
                     SignUpValidationResult.CONFLICT -> {
                         { Text(text = stringResource(R.string.sign_up_email_conflict)) }
                     }
+
                     else -> null
                 }
             )

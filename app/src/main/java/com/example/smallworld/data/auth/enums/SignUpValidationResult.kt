@@ -1,4 +1,4 @@
-package com.example.smallworld.data.auth.models
+package com.example.smallworld.data.auth.enums
 
 enum class SignUpValidationResult {
     SUCCESS,

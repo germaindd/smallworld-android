@@ -1,7 +1,7 @@
 package com.example.smallworld.data.auth
 
 import android.content.Context
-import com.example.smallworld.data.auth.models.JwtDto
+import com.example.smallworld.data.auth.dto.JwtDto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton

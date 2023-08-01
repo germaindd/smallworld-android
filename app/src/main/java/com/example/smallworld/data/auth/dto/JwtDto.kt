@@ -1,4 +1,4 @@
-package com.example.smallworld.data.auth.models
+package com.example.smallworld.data.auth.dto
 
 data class JwtDto(
     val accessToken: String,

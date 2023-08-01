@@ -17,7 +17,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
 import com.example.smallworld.BuildConfig
 import com.example.smallworld.R
-import com.example.smallworld.data.location.Location
+import com.example.smallworld.data.location.model.Location
 import com.example.smallworld.ui.flows.map.LocationProvider
 import com.example.smallworld.ui.flows.map.MapUtils
 import com.example.smallworld.ui.flows.map.MapViewModel

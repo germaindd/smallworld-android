@@ -1,14 +1,14 @@
 package com.example.smallworld.data
 
-import com.example.smallworld.data.auth.models.*
+import com.example.smallworld.data.auth.dto.*
 import com.example.smallworld.data.friends.dto.AcceptRequestDto
 import com.example.smallworld.data.friends.dto.DeclineRequestDto
 import com.example.smallworld.data.friends.dto.FriendRequestDto
 import com.example.smallworld.data.friends.dto.SendRequestDto
 import com.example.smallworld.data.location.dto.LocationDto
 import com.example.smallworld.data.location.dto.UpdateLocationDto
-import com.example.smallworld.data.profile.ProfileDto
-import com.example.smallworld.data.search.UserDto
+import com.example.smallworld.data.profile.dto.ProfileDto
+import com.example.smallworld.data.search.dto.UserDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

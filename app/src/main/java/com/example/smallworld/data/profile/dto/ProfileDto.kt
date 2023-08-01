@@ -1,6 +1,6 @@
-package com.example.smallworld.data.profile
+package com.example.smallworld.data.profile.dto
 
-import com.example.smallworld.data.profile.models.FriendshipStatus
+import com.example.smallworld.data.profile.enums.FriendshipStatus
 
 data class ProfileDto(
     val userId: String,

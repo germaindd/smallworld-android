@@ -1,6 +1,6 @@
 package com.example.smallworld.ui.flows.map.components
 
-import com.example.smallworld.data.location.Location
+import com.example.smallworld.data.location.model.Location
 import javax.inject.Inject
 
 data class LocationsDiff(

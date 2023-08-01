@@ -1,4 +1,6 @@
-package com.example.smallworld.data.search
+package com.example.smallworld.data.search.model
+
+import com.example.smallworld.data.search.dto.UserDto
 
 data class User(
     val id: String,

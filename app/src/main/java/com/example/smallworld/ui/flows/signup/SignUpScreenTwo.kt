@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smallworld.R
-import com.example.smallworld.data.auth.models.SignUpValidationResult
+import com.example.smallworld.data.auth.enums.SignUpValidationResult
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @Composable
@@ -72,9 +72,11 @@ private fun SignUpScreenTwoContent(
                     SignUpValidationResult.INVALID_FORMAT -> {
                         { Text(text = stringResource(R.string.sign_up_invalid_username)) }
                     }
+
                     SignUpValidationResult.CONFLICT -> {
                         { Text(text = stringResource(R.string.sign_up_username_conflict)) }
                     }
+
                     SignUpValidationResult.SUCCESS,
                     null -> null
                 },

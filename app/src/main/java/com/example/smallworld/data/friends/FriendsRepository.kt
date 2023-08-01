@@ -4,7 +4,7 @@ import com.example.smallworld.data.SmallWorldApi
 import com.example.smallworld.data.friends.dto.AcceptRequestDto
 import com.example.smallworld.data.friends.dto.DeclineRequestDto
 import com.example.smallworld.data.friends.dto.SendRequestDto
-import com.example.smallworld.data.friends.dto.toFriendRequest
+import com.example.smallworld.data.friends.model.toFriendRequest
 import com.example.smallworld.di.DispatcherIO
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

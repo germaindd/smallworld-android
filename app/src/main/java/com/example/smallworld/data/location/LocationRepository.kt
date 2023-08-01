@@ -1,6 +1,9 @@
 package com.example.smallworld.data.location
 
 import com.example.smallworld.data.SmallWorldApi
+import com.example.smallworld.data.location.model.Location
+import com.example.smallworld.data.location.model.UpdateLocation
+import com.example.smallworld.data.location.model.toDto
 import com.example.smallworld.di.DispatcherIO
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

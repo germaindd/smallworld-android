@@ -1,3 +1,3 @@
-package com.example.smallworld.data.auth.models
+package com.example.smallworld.data.auth.dto
 
 data class ValidateUsernameDto(val username: String)

@@ -1,4 +1,4 @@
-package com.example.smallworld.data.location
+package com.example.smallworld.data.location.model
 
 data class Location(
     val userId: String,

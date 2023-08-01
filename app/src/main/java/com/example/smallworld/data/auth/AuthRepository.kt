@@ -1,7 +1,13 @@
 package com.example.smallworld.data.auth
 
 import com.example.smallworld.data.SmallWorldAuthApi
-import com.example.smallworld.data.auth.models.*
+import com.example.smallworld.data.auth.dto.JwtDto
+import com.example.smallworld.data.auth.dto.SignInDto
+import com.example.smallworld.data.auth.dto.SignUpDto
+import com.example.smallworld.data.auth.dto.ValidateEmailPasswordDto
+import com.example.smallworld.data.auth.dto.ValidateEmailPasswordResponseDto
+import com.example.smallworld.data.auth.dto.ValidateUsernameDto
+import com.example.smallworld.data.auth.enums.SignUpValidationResult
 import com.example.smallworld.di.DispatcherIO
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

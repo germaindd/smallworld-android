@@ -2,9 +2,22 @@ package com.example.smallworld.ui.flows.map.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +36,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smallworld.R
-import com.example.smallworld.data.profile.Profile
-import com.example.smallworld.data.profile.models.FriendshipStatus
+import com.example.smallworld.data.profile.enums.FriendshipStatus
+import com.example.smallworld.data.profile.model.Profile
 import com.example.smallworld.ui.theme.SmallWorldTheme
 
 @Composable
@@ -84,6 +97,7 @@ private fun FriendshipButtons(
             contentColor = MaterialTheme.colorScheme.onPrimary,
             onClick = onSendRequestButtonClick
         )
+
         FriendshipStatus.OUTGOING_REQUEST -> ProfileIconButton(
             modifier = modifier,
             imageVector = Icons.Filled.Done,
@@ -92,6 +106,7 @@ private fun FriendshipButtons(
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             onClick = null
         )
+
         FriendshipStatus.INCOMING_REQUEST -> Row(modifier) {
             ProfileIconButton(
                 imageVector = Icons.Filled.Mail,
@@ -109,6 +124,7 @@ private fun FriendshipButtons(
                 onClick = onDeclineRequesButtonClickt
             )
         }
+
         FriendshipStatus.FRIENDS -> ProfileIconButton(
             modifier = modifier,
             imageVector = Icons.Filled.Group,
