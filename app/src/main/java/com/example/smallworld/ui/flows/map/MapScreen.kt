@@ -1,7 +1,11 @@
 package com.example.smallworld.ui.flows.map
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Sync
@@ -9,7 +13,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -29,7 +36,6 @@ import com.example.smallworld.ui.flows.map.components.MapSearchBar
 import com.example.smallworld.ui.flows.map.components.MapSearchResults
 import com.example.smallworld.ui.flows.map.components.ProfileComponent
 import com.example.smallworld.ui.flows.map.components.rememberBottomSheetState
-import com.example.smallworld.ui.flows.map.components.*
 import kotlinx.coroutines.flow.collectLatest
 
 private val searchBarHeight = 56.dp
@@ -37,7 +43,6 @@ private val searchBarPadding = 16.dp
 private val currentLocationButtonHeight = 56.dp
 private val currentLocationButtonPadding = 16.dp
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel, modifier: Modifier = Modifier
@@ -52,22 +57,23 @@ fun MapScreen(
     val bottomSheetState =
         rememberBottomSheetState(initialValue = state.value.bottomSheetVisibility)
 
-    // respond to viemodel show bottom sheet event
     LaunchedEffect(viewModel, bottomSheetState) {
-        viewModel.moveBottomSheet.collectLatest {
-            if (it != bottomSheetState.swipeableState.currentValue || it != bottomSheetState.swipeableState.targetValue) {
-                when (it) {
+        viewModel.moveBottomSheet.collectLatest { toState ->
+            if (
+            // it's not at the target state
+                toState != bottomSheetState.currentVisibility
+                // or it is, but it's animating towards a different state
+                || toState != bottomSheetState.targetVisibility
+            ) {
+                when (toState) {
                     BottomSheetVisibility.HIDDEN -> bottomSheetState.hide()
-                    BottomSheetVisibility.SHOWING -> {
-                        bottomSheetState.show()
-                    }
+                    BottomSheetVisibility.SHOWING -> bottomSheetState.show()
                 }
             }
         }
     }
     LaunchedEffect(bottomSheetState.currentVisibility) {
-        viewModel
-            .onSheetVisibilityChanged(bottomSheetState.currentVisibility)
+        viewModel.onSheetVisibilityChanged(bottomSheetState.currentVisibility)
     }
 
     Box(

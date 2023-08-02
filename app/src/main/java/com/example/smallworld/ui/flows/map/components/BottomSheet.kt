@@ -37,6 +37,7 @@ class BottomSheetState(
     val swipeableState: SwipeableState<BottomSheetVisibility>
 ) {
     val currentVisibility get() = swipeableState.currentValue
+    val targetVisibility get() = swipeableState.targetValue
 
     private suspend fun animateTo(visibility: BottomSheetVisibility) {
         swipeableState.animateTo(
