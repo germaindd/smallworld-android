@@ -13,6 +13,9 @@ const val landingScreenRoute = "landing"
 fun NavController.navigateToLanding(builder: NavOptionsBuilder.() -> Unit) =
     navigate(landingScreenRoute, builder)
 
+fun NavOptionsBuilder.popUpToLandingScreenInclusive() =
+    popUpTo(landingScreenRoute) { inclusive = true }
+
 fun NavGraphBuilder.landingScreen(
     onSignInButtonClick: () -> Unit,
     onSignUpButtonClick: () -> Unit

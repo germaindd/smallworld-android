@@ -3,9 +3,13 @@ package com.example.smallworld.ui.flows.splash
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.composable
 
 const val splashScreenRoute = "splash"
+
+fun NavOptionsBuilder.popUpToSplashScreenInclusive() =
+    popUpTo(splashScreenRoute) { inclusive = true }
 
 fun NavGraphBuilder.splashScreen(onUserIsSignedIn: () -> Unit, onUserIsSignedOut: () -> Unit) =
     composable(splashScreenRoute) {

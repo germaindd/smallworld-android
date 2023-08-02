@@ -9,16 +9,17 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.example.smallworld.ui.components.snackbar.SnackBarContainer
 import com.example.smallworld.ui.flows.home.homeScreen
 import com.example.smallworld.ui.flows.home.navigateToHome
 import com.example.smallworld.ui.flows.landing.landingScreen
-import com.example.smallworld.ui.flows.landing.landingScreenRoute
 import com.example.smallworld.ui.flows.landing.navigateToLanding
+import com.example.smallworld.ui.flows.landing.popUpToLandingScreenInclusive
 import com.example.smallworld.ui.flows.signin.navigateToSignIn
 import com.example.smallworld.ui.flows.signin.signInScreen
 import com.example.smallworld.ui.flows.signup.navigateToSignUpGraph
 import com.example.smallworld.ui.flows.signup.signUpGraph
-import com.example.smallworld.ui.components.snackbar.SnackBarContainer
+import com.example.smallworld.ui.flows.splash.popUpToSplashScreenInclusive
 import com.example.smallworld.ui.flows.splash.splashScreen
 import com.example.smallworld.ui.flows.splash.splashScreenRoute
 
@@ -36,28 +37,21 @@ fun SmallWorldApp(modifier: Modifier = Modifier) {
             ) {
                 splashScreen(
                     onUserIsSignedIn = {
-                        navController.navigateToHome {
-                            popUpTo(splashScreenRoute) { inclusive = true }
-                        }
+                        navController.navigateToHome { popUpToSplashScreenInclusive() }
                     },
                     onUserIsSignedOut = {
-                        navController.navigateToLanding {
-                            popUpTo(splashScreenRoute) { inclusive = true }
-                        }
+                        navController.navigateToLanding { popUpToSplashScreenInclusive() }
                     }
                 )
                 landingScreen(
                     onSignInButtonClick = navController::navigateToSignIn,
                     onSignUpButtonClick = navController::navigateToSignUpGraph
                 )
-                signUpGraph(navController)
                 signInScreen(
-                    onSignInSuccess = {
-                        navController.navigateToHome {
-                            popUpTo(landingScreenRoute) { inclusive = true }
-                        }
-                    }, onBackClick = { navController.popBackStack() }
+                    onSignInSuccess = { navController.navigateToHome { popUpToLandingScreenInclusive() } },
+                    onBackClick = { navController.popBackStack() }
                 )
+                signUpGraph(navController)
                 homeScreen()
             }
         }
